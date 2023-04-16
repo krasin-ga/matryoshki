@@ -1,0 +1,11 @@
+{
+  "profiles": {
+    "Matryoshki": {
+      "commandName": "Project"
+    },
+    "Debug Roslyn": {
+      "commandName": "DebugRoslynComponent",
+      "targetProject": "..\\..\\test\\Matryoshki.Tests\\Matryoshki.Tests.csproj"
+    }
+  }
+}

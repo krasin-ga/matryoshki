@@ -1,0 +1,39 @@
+<Project>
+
+  <PropertyGroup>
+    <SourceRoot>$(MSBuildThisFileDirectory)</SourceRoot>
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <Authors>Georgy Krasin</Authors>
+    <Description>Metaprogramming framework based on C# source generators</Description>
+    <Product>Matryoshki</Product>
+    <Copyright>© Georgy Krasin. All rights reserved.</Copyright>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <PackageProjectUrl>https://github.com/krasin-ga/matryoshki</PackageProjectUrl>
+    <PackageIcon>icon.png</PackageIcon>
+    <PackageTags>Metaprogramming AOP Cross-cutting Concerns Decorators Matryoshkas Source Generator C# .NET</PackageTags>
+    <PackageReleaseNotes></PackageReleaseNotes>
+    <PublicRepositoryUrl>https://github.com/krasin-ga/matryoshki</PublicRepositoryUrl>
+    <PrivateRepositoryUrl>https://github.com/krasin-ga/matryoshki</PrivateRepositoryUrl>
+    <RepositoryUrl>https://github.com/krasin-ga/matryoshki</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
+    <LangVersion>11</LangVersion>
+    <Features>strict</Features>
+    <EmbedUntrackedSources>true</EmbedUntrackedSources>
+    <SymbolPackageFormat>snupkg</SymbolPackageFormat>
+    <DebugType>embedded</DebugType>
+    <IncludePackageReferencesDuringMarkupCompilation>true</IncludePackageReferencesDuringMarkupCompilation>
+    <IncludeSymbols>false</IncludeSymbols>
+    <IncludeSource>false</IncludeSource>
+    <Version>1.0.0</Version>
+    <PackageReadmeFile>NugetReadme.md</PackageReadmeFile>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <None Include="$(SourceRoot)assets/icon.png" Pack="true" Visible="false" PackagePath="/" />
+    <None Include="$(SourceRoot)assets/icon-abstract.png" Pack="true" Visible="false" PackagePath="/" />
+    <None Include="$(SourceRoot)assets/NugetReadme.md" Pack="true" Visible="false" PackagePath="/" />
+  </ItemGroup>
+
+</Project>

@@ -1,7 +1,4 @@
-﻿# Matryoshki
-[![NuGet version (Matryoshki)](https://img.shields.io/nuget/v/Matryoshki.svg?style=flat-square)](https://www.nuget.org/packages/Matryoshki/) [![NuGet version (Matryoshki.Abstractions)](https://img.shields.io/nuget/v/Matryoshki.Abstractions.svg?style=flat-square)](https://www.nuget.org/packages/Matryoshki.Abstractions/)
-
-<img src="assets/matryoshki.svg" align="right" />
+﻿# ![Logo](https://raw.githubusercontent.com/krasin-ga/matryoshki/main/assets/logo-128.png) Matryoshki
 
 ### Metaprogramming framework based on C# source generators
 
@@ -23,7 +20,7 @@ Once the packages are installed, you can proceed with creating adornments.
 
 ### Adornments
 
-<img src="assets/flower.png" width="48" align="left" />
+<img src="assets/flower.png" style="float: right;  max-height: 64px; margin: 10px; margin-top: 5px" onerror="this.style.display='none'"/>
 
 Adornments act as blueprints for creating type-agnostic decorators. They consist of a method template and can contain arbitrary members. Rather than being instantiated as objects, the code of adornment classes is directly injected into the decorator classes.
 
@@ -42,68 +39,20 @@ public class HelloAdornment : IAdornment
 
 When creating a decorated method, `call.Forward()` will be replaced with a call to the implementation. And `TResult` will have the type of the actual return value. For `void` methods, a special type `Nothing` will be used.
 
-<details>
-  <summary>A more complex example</summary>
-
-
-An adornment for logging can serve as a slightly closer example to real-world usage:
-``` C#
-public class LoggingAdornment : IAdornment
-{
-    private readonly ILogger<ExceptionLoggingAdornment> _logger;
-
-    public LoggingAdornment(ILogger<ExceptionLoggingAdornment> logger)
-    {
-        _logger = logger;
-    }
-
-    public TResult MethodTemplate<TResult>(Call<TResult> call)
-    {
-        try
-        {
-            if(_logger.IsEnabled(LogLevel.Debug))
-                _logger.LogDebug("Executing {Type}.{Member}", GetType().Name, call.MemberName);
-
-            var result = call.Forward();
-
-            if (_logger.IsEnabled(LogLevel.Debug))
-                _logger.LogDebug("Successfully executed {Type}.{Member}: {Result}", GetType().Name, call.MemberName, result);
-
-            return result;
-        }
-        catch (Exception exception)
-        {
-            _logger.LogError(
-                exception,
-                "Error executing {Type}.{Member}({Arguments})",
-                GetType().Name,
-                call.MemberName,
-                string.Join(",", call.GetArgumentsOfType<object>()));
-
-            throw;
-        }
-    }
-}
-```
-
-  
-</details>
-
 #### Asynchronous method templates
 
 Asynchronous templates can be defined by implementing the `AsyncMethodTemplate` method, which will be used to decorate methods that return `Task` or `ValueTask`. 
 
 Note that asynchronous templates are optional, and async methods will still be decorated because an `AsyncMethodTemplate` will be automatically created from the `MethodTemplate` by awaiting the `Forward*` method invocations.
 
-More tips for writing adornments can be found here: [tips](Tips.md).
+More tips for writing adornments can be found here: [tips](https://github.com/krasin-ga/Tips.md).
 
 
 ### Decoration
 
 Once we have an adornment, we can create our first matryoshkas.
 
-<details>
-<summary>Suppose we have two interfaces that we would like to apply our HelloAdornment to.</summary>
+Suppose we have two interfaces that we would like to apply our `HelloAdornment` to:
 
 ``` C#
 interface IFoo
@@ -118,8 +67,6 @@ interface IBar
 }
 record Bar : IFoo;
 ```
-
-</details>
 
 To create matryoshkas, you just need to write their specification in any appropriate location:
 
@@ -214,11 +161,11 @@ It is not possible to assign names to the classes when using `INesting`. The gen
 
 ## License
 
-This project is licensed under the [MIT license](LICENSE).
+This project is licensed under the [MIT license](https://github.com/krasin-ga/LICENSE).
 
 
 
 ## Quick links
 
 
-* [Tips](Tips.md)
+* [Repository](https://github.com/krasin-ga/matryoshki)

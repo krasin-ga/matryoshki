@@ -1,0 +1,61 @@
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.4.33205.214
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Matryoshki", "src\Matryoshki\Matryoshki.csproj", "{4C028FE7-77A1-42AB-BB03-3849852E5CD6}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Matryoshki.Abstractions", "src\Matryoshki.Abstractions\Matryoshki.Abstractions.csproj", "{CD12814B-1FE8-4246-A57F-1FCE860961FB}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{4FA9ACF0-626A-4EAC-ADFA-B94F959EE712}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "test", "test", "{367E7AC1-50FA-4510-9BC8-1DCF21E1DBDB}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Matryoshki.Tests", "test\Matryoshki.Tests\Matryoshki.Tests.csproj", "{56384515-F11B-4EDE-8BC2-9B32AEB2E827}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{19BB6EDD-9542-4902-801D-20C8C80FC3C2}"
+	ProjectSection(SolutionItems) = preProject
+		Directory.Build.props = Directory.Build.props
+		LICENSE = LICENSE
+		assets\NugetReadme.md = assets\NugetReadme.md
+		Readme.md = Readme.md
+		Tips.md = Tips.md
+	EndProjectSection
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Matryoshki.Tests.ExternalAdornments", "test\Matryoshki.Tests.ExternalAdornments\Matryoshki.Tests.ExternalAdornments.csproj", "{FE81438C-F5CC-4950-9936-A2E52BDECEB0}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{4C028FE7-77A1-42AB-BB03-3849852E5CD6}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{4C028FE7-77A1-42AB-BB03-3849852E5CD6}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{4C028FE7-77A1-42AB-BB03-3849852E5CD6}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{4C028FE7-77A1-42AB-BB03-3849852E5CD6}.Release|Any CPU.Build.0 = Release|Any CPU
+		{CD12814B-1FE8-4246-A57F-1FCE860961FB}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{CD12814B-1FE8-4246-A57F-1FCE860961FB}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{CD12814B-1FE8-4246-A57F-1FCE860961FB}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{CD12814B-1FE8-4246-A57F-1FCE860961FB}.Release|Any CPU.Build.0 = Release|Any CPU
+		{56384515-F11B-4EDE-8BC2-9B32AEB2E827}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{56384515-F11B-4EDE-8BC2-9B32AEB2E827}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{56384515-F11B-4EDE-8BC2-9B32AEB2E827}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{56384515-F11B-4EDE-8BC2-9B32AEB2E827}.Release|Any CPU.Build.0 = Release|Any CPU
+		{FE81438C-F5CC-4950-9936-A2E52BDECEB0}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{FE81438C-F5CC-4950-9936-A2E52BDECEB0}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{FE81438C-F5CC-4950-9936-A2E52BDECEB0}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{FE81438C-F5CC-4950-9936-A2E52BDECEB0}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{4C028FE7-77A1-42AB-BB03-3849852E5CD6} = {4FA9ACF0-626A-4EAC-ADFA-B94F959EE712}
+		{CD12814B-1FE8-4246-A57F-1FCE860961FB} = {4FA9ACF0-626A-4EAC-ADFA-B94F959EE712}
+		{56384515-F11B-4EDE-8BC2-9B32AEB2E827} = {367E7AC1-50FA-4510-9BC8-1DCF21E1DBDB}
+		{FE81438C-F5CC-4950-9936-A2E52BDECEB0} = {367E7AC1-50FA-4510-9BC8-1DCF21E1DBDB}
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {FC5884D5-139E-4E34-A541-8941126D3345}
+	EndGlobalSection
+EndGlobal
