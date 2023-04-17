@@ -1,5 +1,5 @@
 ﻿# Matryoshki
-[![NuGet version (Matryoshki)](https://img.shields.io/nuget/v/Matryoshki.svg?style=flat-square)](https://www.nuget.org/packages/Matryoshki/) [![NuGet version (Matryoshki.Abstractions)](https://img.shields.io/nuget/v/Matryoshki.Abstractions.svg?style=flat-square)](https://www.nuget.org/packages/Matryoshki.Abstractions/)
+[![Matryoshki Nuget](https://img.shields.io/nuget/v/Matryoshki?color=1E9400&label=Matryoshki&style=flat-square)](https://www.nuget.org/packages/Matryoshki/) [![Matryoshki.Abstractions Nuget](https://img.shields.io/nuget/v/Matryoshki.Abstractions?color=1E9400&label=Matryoshki.Abstractions&style=flat-square)](https://www.nuget.org/packages/Matryoshki.Abstractions/) [![Matryoshki.Generators Nuget](https://img.shields.io/nuget/v/Matryoshki.Generators?color=1E9400&label=Matryoshki.Generators&style=flat-square)](https://www.nuget.org/packages/Matryoshki.Generators/) 
 
 <img src="assets/matryoshki.svg" align="right" />
 
@@ -11,14 +11,13 @@
 
 ### Installation
 
-The first step is to add two packages to the target project:
+The first step is to add package to the target project:
 
 ``` bash
 dotnet add package Matryoshki
-dotnet add package Matryoshki.Abstractions
 ```
 
-Once the packages are installed, you can proceed with creating adornments.
+Once the package is installed, you can proceed with creating adornments.
 
 
 ### Adornments

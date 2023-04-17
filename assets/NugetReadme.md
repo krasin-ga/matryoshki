@@ -1,4 +1,6 @@
-﻿# ![Logo](https://raw.githubusercontent.com/krasin-ga/matryoshki/main/assets/logo-128.png) Matryoshki
+﻿# ![Logo](https://raw.githubusercontent.com/krasin-ga/matryoshki/main/assets/matryoshki.svg) Matryoshki
+
+[![Matryoshki Nuget](https://img.shields.io/nuget/v/Matryoshki?color=1E9400&label=Matryoshki&style=flat-square)](https://www.nuget.org/packages/Matryoshki/) [![Matryoshki.Abstractions Nuget](https://img.shields.io/nuget/v/Matryoshki.Abstractions?color=1E9400&label=Matryoshki.Abstractions&style=flat-square)](https://www.nuget.org/packages/Matryoshki.Abstractions/) [![Matryoshki.Generators Nuget](https://img.shields.io/nuget/v/Matryoshki.Generators?color=1E9400&label=Matryoshki.Generators&style=flat-square)](https://www.nuget.org/packages/Matryoshki.Generators/) 
 
 ### Metaprogramming framework based on C# source generators
 
@@ -8,19 +10,16 @@
 
 ### Installation
 
-The first step is to add two packages to the target project:
+The first step is to add package to the target project:
 
 ``` bash
 dotnet add package Matryoshki
-dotnet add package Matryoshki.Abstractions
 ```
 
-Once the packages are installed, you can proceed with creating adornments.
+Once the package is installed, you can proceed with creating adornments.
 
 
 ### Adornments
-
-<img src="assets/flower.png" style="float: right;  max-height: 64px; margin: 10px; margin-top: 5px" onerror="this.style.display='none'"/>
 
 Adornments act as blueprints for creating type-agnostic decorators. They consist of a method template and can contain arbitrary members. Rather than being instantiated as objects, the code of adornment classes is directly injected into the decorator classes.
 
@@ -166,6 +165,5 @@ This project is licensed under the [MIT license](https://github.com/krasin-ga/LI
 
 
 ## Quick links
-
 
 * [Repository](https://github.com/krasin-ga/matryoshki)

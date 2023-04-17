@@ -130,7 +130,7 @@ Matryoshka<ITestInterface>
 ```
 
 ## Compiled Adornments
-If the adornment is defined in a project (or package) different from the one where it is being used, its syntax tree must be serialized for proper consumption. To do this, both the `Matryoshki.Abstractions` and `Matryoshki` packages must be installed.
+If the adornment is defined in a project (or package) different from the one where it is being used, its syntax tree must be serialized for proper consumption. To do this, both the `Matryoshki.Abstractions` and `Matryoshki.Generators` packages must be referenced.
 
 <p align="center">
 <img width="128" src="assets/footer.png"/>
