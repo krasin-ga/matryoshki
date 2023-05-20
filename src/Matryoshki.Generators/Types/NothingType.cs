@@ -49,7 +49,13 @@ internal static class NothingType
         return SyntaxFactory.InvocationExpression(
             methodExpression,
             SyntaxFactory.ArgumentList(
-                SyntaxFactory.SeparatedList(new[] { SyntaxFactory.Argument(instance), SyntaxFactory.Argument(value), SyntaxFactory.Argument(lambda) })
+                SyntaxFactory.SeparatedList(
+                    new[]
+                    {
+                        SyntaxFactory.Argument(instance),
+                        SyntaxFactory.Argument(value),
+                        SyntaxFactory.Argument(lambda)
+                    })
             ));
     }
 

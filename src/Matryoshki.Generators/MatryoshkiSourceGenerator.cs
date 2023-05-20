@@ -1,6 +1,7 @@
 ﻿using System.Collections.Immutable;
 using System.Text;
 using Matryoshki.Generators.Builders;
+using Matryoshki.Generators.Extensions;
 using Matryoshki.Generators.Models;
 using Matryoshki.Generators.Pipelines;
 using Microsoft.CodeAnalysis;
@@ -37,6 +38,10 @@ public class MatryoshkiSourceGenerator : IIncrementalGenerator
 
     public void Initialize(IncrementalGeneratorInitializationContext context)
     {
+        var builtInAdornments = new BuiltInAdornmentsPipeline()
+                                .Create(context)
+                                .Collect();
+
         var compiledAdornments = new CompiledAdornmentsPipeline()
             .Create(context);
 
@@ -46,10 +51,16 @@ public class MatryoshkiSourceGenerator : IIncrementalGenerator
         var combinedAdornments
             = compiledAdornments
               .Collect().Combine(syntaxAdornments.Collect())
-              .Select((c, _) => (Compiled: c.Left, Syntax: c.Right));
+              .Select((c, _) => (Compiled: c.Left, Syntax: c.Right))
+              .Combine(builtInAdornments)
+              .Select((c, _) => (c.Left.Compiled, c.Left.Syntax, BuiltIn: c.Right));
 
         var types = new MatryoshkaTypesPipeline()
             .Create(context);
+
+        var interfaceExtractions = new InterfaceExtractionPipeline()
+                                   .Create(context)
+                                   .Collect();
 
         var typesWithAdornments
             = types
@@ -59,11 +70,16 @@ public class MatryoshkiSourceGenerator : IIncrementalGenerator
               .Select(
                   (c, _) =>
                       new GenerationInput(
-                          Mixes: c.Left.Left,
-                          Adornments: c.Left.Right.Syntax.Concat(c.Left.Right.Compiled),
-                          Compilation: c.Right
+                          Metadata: c.Left.Left,
+                          Adornments: c.Left.Right.Syntax
+                                       .Concat(c.Left.Right.Compiled)
+                                       .Concat(c.Left.Right.BuiltIn),
+                          Compilation: c.Right,
+                          InterfaceExtractions: ImmutableArray<InterfaceExtractionMetadata>.Empty
                       )
-              );
+              )
+              .Combine(interfaceExtractions)
+              .Select((c, _) => c.Left with { InterfaceExtractions = c.Right });
 
         context.RegisterSourceOutput(
             typesWithAdornments,
@@ -75,8 +91,11 @@ public class MatryoshkiSourceGenerator : IIncrementalGenerator
         SourceProductionContext context,
         GenerationInput input)
     {
-        var (mixes, adornments, compilation) = input;
+        var (mixes, adornments, compilation, interfaceExtractions) = input;
         var matryoshkiCompilation = new MatryoshkiCompilation(compilation);
+
+        foreach (var extractionMetadata in interfaceExtractions)
+            GenerateInterfaces(context, extractionMetadata);
 
         foreach (var adornmentMetadata in adornments)
             matryoshkiCompilation.AddAdornmentMetadata(adornmentMetadata);
@@ -85,7 +104,7 @@ public class MatryoshkiSourceGenerator : IIncrementalGenerator
         {
             try
             {
-                GenerateDecorators(context, mixMetadata, matryoshkiCompilation);
+                GenerateDecorators(context, mixMetadata, interfaceExtractions, matryoshkiCompilation);
             }
             catch (Exception exception)
             {
@@ -94,42 +113,76 @@ public class MatryoshkiSourceGenerator : IIncrementalGenerator
         }
     }
 
-    private static void GenerateDecorators(
-        SourceProductionContext context, 
-        MatryoshkaMetadata mixMetadata, 
-        MatryoshkiCompilation matryoshkiCompilation)
+    private static void GenerateInterfaces(
+        SourceProductionContext context,
+        InterfaceExtractionMetadata metadata)
     {
-        if (mixMetadata.Target is IErrorTypeSymbol)
+        if (metadata.Target is IErrorTypeSymbol)
             return;
 
-        if (mixMetadata.Target.IsSealed)
+        context.CancellationToken.ThrowIfCancellationRequested();
+
+        var interfaceGenerator = new InterfaceGenerator();
+        var code = interfaceGenerator.GenerateInterfaceWithAdapter(metadata, context.CancellationToken);
+
+        context.AddSource(
+            $"{metadata.Namespace}.{metadata.InterfaceName}.g.cs",
+            SourceText.From(code, Encoding.UTF8));
+    }
+
+    private static void GenerateDecorators(
+        SourceProductionContext context,
+        MatryoshkaMetadata metadata,
+        ImmutableArray<InterfaceExtractionMetadata> interfaceExtractions,
+        MatryoshkiCompilation compilation)
+    {
+        InterfaceExtractionMetadata? extractedInterface = null;
+        if (metadata.Target is IErrorTypeSymbol)
         {
-            context.ReportDiagnostic(Diagnostic.Create(SealedTypeRule, mixMetadata.Location));
+            var metadataCopy = metadata;
+            var interfaceExtractionMetadata = interfaceExtractions.FirstOrDefault(
+                i => i.Namespace == metadataCopy.SourceNameSpace
+                     && i.InterfaceName == metadataCopy.Target.Name);
+
+            if (interfaceExtractionMetadata == null)
+                return;
+
+            extractedInterface = interfaceExtractionMetadata;
+        }
+
+        if (metadata.Target.IsSealed && extractedInterface is null)
+        {
+            context.ReportDiagnostic(Diagnostic.Create(SealedTypeRule, metadata.Location));
             return;
         }
 
-        if (mixMetadata.Target.TypeKind != TypeKind.Interface)
+        if (metadata.Target.TypeKind != TypeKind.Interface
+            && extractedInterface is null)
         {
-            context.ReportDiagnostic(Diagnostic.Create(NonInterfaceTypeRule, mixMetadata.Location));
+            context.ReportDiagnostic(Diagnostic.Create(NonInterfaceTypeRule, metadata.Location));
         }
 
-        if (mixMetadata.Nesting is { })
-            matryoshkiCompilation.AddPackMetadata(mixMetadata.Nesting);
+        if (metadata.Nesting is { })
+            compilation.AddPackMetadata(metadata.Nesting);
 
-        var mixAdornments = mixMetadata.GetAdornments(matryoshkiCompilation);
+        var adornments = metadata.GetAdornments(compilation);
 
-        for (var i = 0; i < mixAdornments.Length; i++)
+        for (var i = 0; i < adornments.Length; i++)
         {
             context.CancellationToken.ThrowIfCancellationRequested();
 
-            var current = mixAdornments[i];
-            var next = i + 1 < mixAdornments.Length
-                ? mixAdornments[i + 1]
+            var current = adornments[i];
+            var next = i + 1 < adornments.Length
+                ? adornments[i + 1]
                 : (AdornmentMetadata?)null;
 
-            var generationContext = new DecoratorGenerationContext(mixMetadata, current, next);
-            var decoratorGenerator = new DecoratorGenerator(generationContext);
-            var code = decoratorGenerator.GenerateDecoratorClass(context.CancellationToken);
+            var generationContext = new DecoratorGenerationContext(metadata, current, next);
+
+            var decoratorGenerator = new DecoratorGenerator(
+                context: generationContext,
+                extractedInterface);
+
+            var code = decoratorGenerator.GenerateCompilationUnit(context.CancellationToken);
 
             context.AddSource(
                 $"{generationContext.GetNamespace()}.{generationContext.GetClassName()}.g.cs",
@@ -139,8 +192,9 @@ public class MatryoshkiSourceGenerator : IIncrementalGenerator
 
     private record struct GenerationInput
     (
-        ImmutableArray<MatryoshkaMetadata> Mixes,
+        ImmutableArray<MatryoshkaMetadata> Metadata,
         IEnumerable<AdornmentMetadata> Adornments,
-        Compilation Compilation
+        Compilation Compilation,
+        ImmutableArray<InterfaceExtractionMetadata> InterfaceExtractions
     );
 }

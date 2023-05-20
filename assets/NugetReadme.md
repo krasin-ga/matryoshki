@@ -2,9 +2,13 @@
 
 [![Matryoshki Nuget](https://img.shields.io/nuget/v/Matryoshki?color=1E9400&label=Matryoshki&style=flat-square)](https://www.nuget.org/packages/Matryoshki/) [![Matryoshki.Abstractions Nuget](https://img.shields.io/nuget/v/Matryoshki.Abstractions?color=1E9400&label=Matryoshki.Abstractions&style=flat-square)](https://www.nuget.org/packages/Matryoshki.Abstractions/) [![Matryoshki.Generators Nuget](https://img.shields.io/nuget/v/Matryoshki.Generators?color=1E9400&label=Matryoshki.Generators&style=flat-square)](https://www.nuget.org/packages/Matryoshki.Generators/) 
 
-### Metaprogramming framework based on C# source generators
+**"Matryoshki"** (Матрёшки, Matryoshkas) is a set of abstractions and C# source generators that allow you to describe type-agnostic templates and create decorators based on them. All of this works at the coding stage, which significantly improves productivity, simplifies development and debugging (the source code of the generated classes can be immediately viewed), and allows the library to be used in limited AOT runtimes (such as AOT iOS Unity runtime).
 
-"Matryoshki" (Матрёшки, Matryoshkas) is a set of abstractions and C# source generators that allow you to describe type-agnostic templates and create decorators based on them. All of this works at the coding stage, which significantly improves productivity, simplifies development and debugging (the source code of the generated classes can be immediately viewed), and allows the library to be used in limited AOT runtimes (such as AOT iOS Unity runtime).
+
+#### Key Features
+* Define type-agnostic templates and create decorators based on them:
+ `Decorate<IFoo>.With<LoggingAdornment>().Name<FooWithLogging>()`
++ Extract interfaces and automatically generate adapters from classes: `From<Bar>.ExtractInterface<IBar>()`.
 
 ## Getting Started
 
@@ -154,7 +158,7 @@ It is not possible to assign names to the classes when using `INesting`. The gen
 * Do not use a variable named `value`, as this can conflict with a property setter.
 * The `call` parameter should not be passed to other methods.
 * `default` cannot be used without specifying a type argument.
-* To apply decorations, the members must be abstract or virtual.
+* To apply decorations, the members must be abstract or virtual. To surpass this limitation you can generate an interface with expression `From<TClass>.ExtractInterface<TInterface>()` and then decrorate `TInterface`.
 * The decoration expression must be computable at compile time and written with a single statement
 * Pattern matching will not always work
 

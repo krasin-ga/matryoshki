@@ -1,6 +1,4 @@
-﻿using System.Diagnostics.Contracts;
-
-namespace Matryoshki.Abstractions;
+﻿namespace Matryoshki.Abstractions;
 
 public readonly struct MatryoshkaType
 {

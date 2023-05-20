@@ -87,7 +87,7 @@ public class CachingAdornment : IAdornment
         _cache = cache;
     }
 
-    public async ValueTask<TResult> AsyncMethodTemplate<TResult>(Call<TResult> call)
+    public async Task<TResult> AsyncMethodTemplate<TResult>(Call<TResult> call)
     {
         if (typeof(TResult) == typeof(Nothing))
             return await call.NextAsync();
@@ -127,6 +127,20 @@ Decorators can be generic, but you need to specify type arguments when decoratin
 Matryoshka<ITestInterface>
     .With<ArgumentsTestingAdornment<string>>()
     .Name<StringArgumentsTestingDecorator>();
+```
+
+## Interface extraction with automatic generation of adapter
+Here is an example of how you can extract interface from class and then decorate it:
+```C#
+
+From<TestClass>.ExtractInterface<ITestClassInterface>();
+
+Decorate<ITestClassInterface>
+    .With<SimpleAdornment>()
+    .Name<TestClassInterfaceDecorator>();
+
+var decorator = new TestClassInterfaceDecorator(
+    new ITestClassInterface.Adapter(new TestClass()));
 ```
 
 ## Compiled Adornments

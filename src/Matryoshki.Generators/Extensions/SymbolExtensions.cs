@@ -1,4 +1,5 @@
 ﻿using Microsoft.CodeAnalysis;
+using Microsoft.CodeAnalysis.CSharp;
 
 namespace Matryoshki.Generators.Extensions;
 
@@ -88,7 +89,7 @@ internal static class SymbolExtensions
                 || alreadyAdded.Contains(symbol.OriginalDefinition))
                 return false;
 
-            if(symbol.IsSealed)
+            if (symbol.IsSealed)
                 return false;
 
 
@@ -122,12 +123,70 @@ internal static class SymbolExtensions
 
             if (member is IMethodSymbol { OverriddenMethod: { } overriddenMethod })
                 except.Add(overriddenMethod);
+
+            if (member is IEventSymbol { OverriddenEvent: { } overriddenEvent })
+                except.Add(overriddenEvent);
         }
-          
+
 
         if (type.BaseType is { SpecialType: not SpecialType.System_Object })
             foreach (var member in GetMembersThatCanBeDecorated(type.BaseType, except))
-                    yield return member;
+                yield return member;
+    }
+
+    public static IEnumerable<ISymbol> GetMembersThatCanBeExtractedToInterface(
+        this ITypeSymbol type,
+        HashSet<ISymbol>? except = null)
+    {
+        static bool IsSuitable(ISymbol symbol, HashSet<ISymbol> alreadyAdded)
+        {
+            if (alreadyAdded.Contains(symbol)
+                || alreadyAdded.Contains(symbol.OriginalDefinition))
+                return false;
+
+            if (symbol.DeclaredAccessibility != Accessibility.Public)
+                return false;
+
+            if (symbol is IPropertySymbol { OverriddenProperty: { } overriddenProperty })
+                symbol = overriddenProperty;
+
+            if (symbol is IMethodSymbol { OverriddenMethod: { } overriddenMethod })
+                symbol = overriddenMethod;
+
+            return symbol is IEventSymbol or IPropertySymbol 
+                or IMethodSymbol {MethodKind: MethodKind.Ordinary}
+                or IFieldSymbol;
+        }
+
+        except ??= new HashSet<ISymbol>(SymbolEqualityComparer.Default);
+
+        if (type.TypeKind is TypeKind.Interface)
+        {
+            foreach (var member in type.GetAllInterfaceMembers())
+                yield return member;
+
+            yield break;
+        }
+
+        foreach (var member in type.GetMembers())
+        {
+            if (IsSuitable(member, except))
+                yield return member;
+
+            if (member is IPropertySymbol { OverriddenProperty: { } overriddenProperty })
+                except.Add(overriddenProperty);
+
+            if (member is IMethodSymbol { OverriddenMethod: { } overriddenMethod })
+                except.Add(overriddenMethod);
+
+            if (member is IEventSymbol { OverriddenEvent: { } overriddenEvent })
+                except.Add(overriddenEvent);
+        }
+
+
+        if (type.BaseType is { SpecialType: not SpecialType.System_Object })
+            foreach (var member in GetMembersThatCanBeDecorated(type.BaseType, except))
+                yield return member;
     }
 
     public static bool IsImplementingInterface(

@@ -5,10 +5,13 @@ namespace Matryoshki.Abstractions;
 /// <summary>
 /// Starting point to define Matryoshka for <typeparamref name="T" />
 /// </summary>
-/// <typeparam name="T"></typeparam>
 public class Matryoshka<T>
 {
     private const string RootNamespace = "MatryoshkiGenerated";
+
+    protected Matryoshka()
+    {
+    }
 
     /// <summary>
     /// Decorates <typeparamref name="T" /> with <typeparamref name="TAdornment" />
@@ -37,7 +40,7 @@ public class Matryoshka<T>
                              .GenericTypeArguments
                              .Select(
                                  adornmentType => LocateType(
-                                     callingAssembly, 
+                                     callingAssembly,
                                      GetTypeName(@namespace, adornmentType)))
                              .ToArray();
 

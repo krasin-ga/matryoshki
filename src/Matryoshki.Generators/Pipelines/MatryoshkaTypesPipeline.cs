@@ -15,17 +15,8 @@ internal class MatryoshkaTypesPipeline
         IncrementalGeneratorInitializationContext context)
     {
         return context.SyntaxProvider.CreateSyntaxProvider(
-                          (node, _) => node is InvocationExpressionSyntax
-                          {
-                              Expression: MemberAccessExpressionSyntax
-                              {
-                                  Expression: GenericNameSyntax { Identifier.Text: MatryoshkaType.TypeName or MatryoshkaType.Alias },
-                                  Name: GenericNameSyntax
-                                  {
-                                      Identifier.Text: MatryoshkaType.Methods.With or MatryoshkaType.Methods.WithNesting
-                                  }
-                              }
-                          },
+                          (node, _) => node is InvocationExpressionSyntax { Expression: { } expression }
+                                       && expression.IsMatryoshkaExpression(),
                           Transform
                       ).Where(v => v != null)
                       .Select((v, _) => v!.Value);
@@ -37,17 +28,10 @@ internal class MatryoshkaTypesPipeline
     {
         var invocation = (InvocationExpressionSyntax)context.Node;
 
-        if (invocation.Expression is not MemberAccessExpressionSyntax
-            {
-                Expression: GenericNameSyntax { Identifier.Text: MatryoshkaType.TypeName or MatryoshkaType.Alias } mixSyntax,
-                Name: GenericNameSyntax
-                {
-                    Identifier.Text: MatryoshkaType.Methods.With or MatryoshkaType.Methods.WithNesting
-                } withSyntax
-            })
+        if (!invocation.Expression.TryParseMatryoshkaExpression(out var targetSyntax, out var withSyntax))
             return null;
 
-        var targetType = GetFirstTypeArgument(mixSyntax, context.SemanticModel);
+        var targetType = GetFirstTypeArgument(targetSyntax, context.SemanticModel);
         var withType = GetFirstTypeArgument(withSyntax, context.SemanticModel);
 
         var parentType = invocation.FirstAncestorOrSelf<TypeDeclarationSyntax>();
@@ -88,6 +72,65 @@ internal class MatryoshkaTypesPipeline
             SourceNameSpace: @namespace,
             IsInGlobalStatement: isGlobal,
             Location: invocation.GetLocation());
+    }
+
+    private static ITypeSymbol? GetFirstTypeArgument(
+        GenericNameSyntax puffSyntax,
+        SemanticModel semanticModel)
+    {
+        var firstArg = puffSyntax.TypeArgumentList.Arguments.FirstOrDefault();
+
+        if (firstArg is null)
+            return null;
+
+        return semanticModel.GetTypeInfo(firstArg).ConvertedType;
+    }
+}
+
+/// <summary>
+/// Scans for interface extraction directives
+/// </summary>
+internal class InterfaceExtractionPipeline
+{
+    public IncrementalValuesProvider<InterfaceExtractionMetadata> Create(
+        IncrementalGeneratorInitializationContext context)
+    {
+        return context.SyntaxProvider.CreateSyntaxProvider(
+                          (node, _) => node is InvocationExpressionSyntax { Expression: { } expression }
+                                       && expression.IsInterfaceExtractionExpression(),
+                          Transform
+                      ).Where(v => v != null)
+                      .Select((v, _) => v!.Value);
+    }
+
+    private static InterfaceExtractionMetadata? Transform(
+        GeneratorSyntaxContext context,
+        CancellationToken token)
+    {
+        var invocation = (InvocationExpressionSyntax)context.Node;
+
+        if (!invocation.Expression.TryParseInterfaceExtractionExpression(
+                out var targetSyntax,
+                out var interfaceName))
+            return null;
+
+        var targetType = GetFirstTypeArgument(targetSyntax, context.SemanticModel) as INamedTypeSymbol;
+
+        var parentType = invocation.FirstAncestorOrSelf<TypeDeclarationSyntax>();
+
+        if (targetType is null)
+            return null;
+
+        var typeSymbol = parentType is { }
+            ? context.SemanticModel.GetDeclaredSymbol(parentType)
+            : null;
+
+        var @namespace = typeSymbol?.ContainingNamespace.ToDisplayString();
+
+        return new InterfaceExtractionMetadata(
+            targetType,
+            InterfaceName: interfaceName,
+            Namespace: @namespace);
     }
 
     private static ITypeSymbol? GetFirstTypeArgument(

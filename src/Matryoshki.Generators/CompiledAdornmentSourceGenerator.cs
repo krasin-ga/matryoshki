@@ -1,5 +1,6 @@
 ﻿using System.Text;
 using Matryoshki.Generators.Extensions;
+using Matryoshki.Generators.Serialization;
 using Matryoshki.Generators.SyntaxRewriters;
 using Matryoshki.Generators.Types;
 using Microsoft.CodeAnalysis;
@@ -53,9 +54,7 @@ public class CompiledAdornmentSourceGenerator : IIncrementalGenerator
         var namesRewriter = new AdornmentRewriter(semanticModel, classDeclaration, context.CancellationToken);
         var processedSyntaxTree = namesRewriter.Visit(classDeclaration.SyntaxTree.GetRoot()).SyntaxTree;
         var compilationUnit = processedSyntaxTree.GetCompilationUnitRoot();
-
-        var compilationUnitBytes = Encoding.UTF8.GetBytes(compilationUnit.ToFullString());
-        var encodedString = Convert.ToBase64String(compilationUnitBytes);
+        var encodedString = AdornmentSerializer.Serialize(compilationUnit.ToFullString());
 
         var fullName = declaredSymbol.GetFullName();
 

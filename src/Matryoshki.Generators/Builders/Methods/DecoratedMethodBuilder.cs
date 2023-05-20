@@ -7,9 +7,9 @@ using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using static Microsoft.CodeAnalysis.CSharp.SyntaxFactory;
 
-namespace Matryoshki.Generators.Builders;
+namespace Matryoshki.Generators.Builders.Methods;
 
-internal class DecoratedMethodBuilder
+internal class DecoratedMethodBuilder: DecoratedMethodBuilderBase
 {
     private readonly AdornmentMetadata _adornmentMetadata;
     private readonly ParameterNamesFieldBuilder _parameterNamesFieldBuilder;
@@ -22,7 +22,7 @@ internal class DecoratedMethodBuilder
         _adornmentMetadata = adornmentMetadata;
     }
 
-    public MemberDeclarationSyntax[] GenerateDecoratedMethodWithHelperFields(
+    public override MemberDeclarationSyntax[] GenerateDecoratedMethod(
         IMethodSymbol methodSymbol,
         CancellationToken cancellationToken)
     {
@@ -31,12 +31,13 @@ internal class DecoratedMethodBuilder
         var modifiers = template.GetSymbolModifier(methodSymbol);
         var isAsync = template.HasAsyncModifier || template.NeedToConvertToAsync;
 
-        var declaration = MethodDeclaration(methodSymbol.ReturnType.ToTypeSyntax(), methodSymbol.Name)
-                          .WithModifiers(TokenList(modifiers))
-                          .WithTypeParameterList(GetTypeParameterSyntaxNode(methodSymbol))
-                          .WithParameterList(GetParameterSyntaxNode(methodSymbol));
+        var declaration = methodSymbol.ToMethodDeclarationSyntax(
+            modifiers: modifiers,
+            renameParameters: true);
 
-        ExpressionSyntax next = CreateInvocationExpression(methodSymbol);
+        ExpressionSyntax next = CreateInvocationExpression(
+            methodSymbol, 
+            renameArguments: true);
 
         var returnsNothing = methodSymbol.ReturnsVoid
                              || (isAsync && methodSymbol.ReturnType.DerivesFromNonTypedTaskOrValueTask());
@@ -58,7 +59,8 @@ internal class DecoratedMethodBuilder
         if (nothingMethodWrapper is { })
             next = next is InvocationExpressionSyntax nextInvocationExpressionSyntax
                 ? nextInvocationExpressionSyntax.WithExpression(IdentifierName(nothingMethodWrapper.Identifier))
-                : CreateInvocationExpression(methodSymbol).WithExpression(IdentifierName(nothingMethodWrapper.Identifier));
+                : CreateInvocationExpression(methodSymbol, renameArguments: true)
+                    .WithExpression(IdentifierName(nothingMethodWrapper.Identifier));
 
         if (template.NeedToConvertToAsync)
             next = AwaitExpression(next);
@@ -93,82 +95,6 @@ internal class DecoratedMethodBuilder
                    fieldWithParameterNames,
                    declaration,
                };
-    }
-
-    private static InvocationExpressionSyntax CreateInvocationExpression(IMethodSymbol method)
-    {
-        SimpleNameSyntax methodName = method.IsGenericMethod
-            ? GenericName(Identifier(method.Name),
-                          TypeArgumentList(
-                              SeparatedList(method.TypeParameters.Select(tp => tp.ToTypeSyntax()))))
-            : IdentifierName(method.Name);
-
-        return InvocationExpression(
-                MemberAccessExpression(
-                    SyntaxKind.SimpleMemberAccessExpression,
-                    IdentifierName("_inner"),
-                    methodName))
-            .WithArgumentList(
-                ArgumentList(SeparatedList(GetArgumentSyntaxNodes(method))));
-    }
-
-    private static TypeParameterListSyntax? GetTypeParameterSyntaxNode(IMethodSymbol method)
-    {
-        if (!method.TypeParameters.Any())
-            return null;
-
-        var typeParameterNodes = method.TypeParameters.Select(tp => TypeParameter(tp.Name));
-        return TypeParameterList(SeparatedList(typeParameterNodes));
-    }
-
-    private static ParameterListSyntax GetParameterSyntaxNode(IMethodSymbol method)
-    {
-        var parameterNodes =  method.Parameters.Select(
-            parameter =>
-            {
-                var parameterSyntax = Parameter(parameter.Name.ToMatryoshkiIdentifier())
-                    .WithType(parameter.Type.ToTypeSyntax());
-
-                if (TryCreateTokenFromRefKind(parameter.RefKind) is { } token)
-                    parameterSyntax = parameterSyntax.WithModifiers(
-                        SyntaxTokenList.Create(token)
-                    );
-
-                return parameterSyntax;
-            }
-        );
-
-
-        return ParameterList(SeparatedList(parameterNodes));
-    }
-
-    private static IEnumerable<ArgumentSyntax> GetArgumentSyntaxNodes(IMethodSymbol method)
-    {
-        return method.Parameters.Select(
-            parameter =>
-            {
-                var identifier = parameter.Name.ToMatryoshkiIdentifierName();
-                return TryCreateTokenFromRefKind(parameter.RefKind) is not {} token 
-                    ? Argument(identifier)
-                    : Argument(identifier).WithRefKindKeyword(token);
-            }
-        );
-    }
-
-    private static SyntaxToken? TryCreateTokenFromRefKind(RefKind refKind)
-    {
-        SyntaxKind syntaxKind = refKind switch
-        {
-            RefKind.None => SyntaxKind.None,
-            RefKind.Ref => SyntaxKind.RefKeyword,
-            RefKind.Out => SyntaxKind.OutKeyword,
-            RefKind.In => SyntaxKind.InKeyword,
-            _ => SyntaxKind.None
-        };
-
-        if (refKind == RefKind.None)
-            return null;
-        return Token(syntaxKind);
     }
 
     private static SyntaxToken GetVoidMethodWrapperIdentifier(SyntaxToken identifier)

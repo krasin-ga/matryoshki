@@ -1,12 +1,61 @@
-﻿using System.Text;
-using Matryoshki.Generators.Extensions;
+﻿using Matryoshki.Generators.Extensions;
 using Matryoshki.Generators.Models;
+using Matryoshki.Generators.Serialization;
 using Matryoshki.Generators.Types;
 using Microsoft.CodeAnalysis;
-using Microsoft.CodeAnalysis.CSharp;
-using Microsoft.CodeAnalysis.CSharp.Syntax;
 
 namespace Matryoshki.Generators.Pipelines;
+
+internal class BuiltInAdornmentsPipeline
+{
+    private static readonly object FakeOutput = new ();
+
+    public IncrementalValuesProvider<AdornmentMetadata> Create(
+        IncrementalGeneratorInitializationContext context)
+    {
+        return context.CompilationProvider
+                      .Select(static (_, _) => FakeOutput) 
+                      .SelectMany(static (_, ct) => GetBuiltInAdornments(ct));
+    }
+
+    private static IEnumerable<AdornmentMetadata> GetBuiltInAdornments(
+        CancellationToken cancellationToken)
+    {
+        cancellationToken.ThrowIfCancellationRequested();
+
+        yield return PassthroughAdornment.AdornmentMetadata;
+    }
+}
+
+
+internal static class PassthroughAdornment
+{
+    public static readonly AdornmentMetadata AdornmentMetadata =
+        AdornmentSerializer.DeserializeAndCompile(
+            AdornmentSerializer.Serialize(SourceCode),
+            ClassName,
+            Enumerable.Empty<MetadataReference>()
+        );
+
+    private const string ClassName = "PassthroughAdornment";
+    private const string SourceCode = """
+        namespace Matryoshki.BuilInAdornments;
+
+        public class PassthroughAdornment : IAdornment
+        {
+            public TResult MethodTemplate<TResult>(Call<TResult> call)
+            {
+                return call.Forward();
+            }
+
+            public Task<TResult> AsyncMethodTemplate<TResult>(Call<TResult> call)
+            {
+                return call.ForwardAsync();
+            }
+        }
+
+        """;
+}
 
 /// <summary>
 /// Scans for attributes in all assemblies and deserialize syntax trees into AdornmentMetadata
@@ -22,7 +71,7 @@ internal class CompiledAdornmentsPipeline
                       .Select(ConstructAdornmentMetadata);
     }
 
-    private AdornmentMetadata ConstructAdornmentMetadata(
+    private static AdornmentMetadata ConstructAdornmentMetadata(
         AttributeCompilation attributeCompilation,
         CancellationToken cancellationToken)
     {
@@ -36,31 +85,11 @@ internal class CompiledAdornmentsPipeline
         var className = ((string)arguments[1].Value!);
         var serializedCompilationUnit = ((string)arguments[2].Value!);
 
-        var compilationUnitString = Encoding.UTF8.GetString(
-            Convert.FromBase64String(serializedCompilationUnit));
-
-        var compilationUnit = SyntaxFactory.ParseCompilationUnit(compilationUnitString);
-        var syntaxTree = compilationUnit.SyntaxTree;
-        var compilation = CSharpCompilation.Create(
-            assemblyName: null,
-            syntaxTrees: new[] { syntaxTree },
-            references: attributeCompilation.Compilation.References
-        );
-
-        var @class = syntaxTree
-                     .GetRoot()
-                     .DescendantNodes()
-                     .OfType<ClassDeclarationSyntax>()
-                     .Single(c => c.Identifier.Text == className);
-
-        var semanticModel = compilation.GetSemanticModel(syntaxTree);
-        var declaredSymbol = semanticModel.GetDeclaredSymbol(@class);
-
-        return new AdornmentMetadata(
-            declaredSymbol!,
-            syntaxTree,
-            @class,
-            semanticModel);
+        return AdornmentSerializer.DeserializeAndCompile(
+            serializedCompilationUnit,
+            className,
+            attributeCompilation.Compilation?.References
+            ?? Array.Empty<MetadataReference>());
     }
 
     private IEnumerable<AssemblyCompilation> GetAllAssemblies(
@@ -120,7 +149,29 @@ internal class CompiledAdornmentsPipeline
         Compilation Compilation,
         INamedTypeSymbol BaseAttributeSymbol);
 
-    private record struct AttributeCompilation(
-        AttributeData Attribute,
-        Compilation Compilation);
+    private readonly struct AttributeCompilation
+    {
+        public AttributeData Attribute { get; }
+
+        public Compilation? Compilation { get; }
+
+        public AttributeCompilation(
+            AttributeData attribute,
+            Compilation? compilation)
+        {
+            Attribute = attribute;
+            Compilation = compilation;
+        }
+
+        public override bool Equals(object? obj)
+        {
+            return obj is AttributeCompilation other
+                   && Attribute.Equals(other.Attribute);
+        }
+
+        public override int GetHashCode()
+        {
+            return Attribute.GetHashCode();
+        }
+    }
 }

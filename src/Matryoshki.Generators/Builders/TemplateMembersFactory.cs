@@ -31,9 +31,6 @@ internal class TemplateMembersFactory
 
     public IEnumerable<MemberDeclarationSyntax> GetMembers()
     {
-        foreach (var constructor in GetConstructors())
-            yield return constructor;
-
         foreach (var parameter in _additionalParameters)
         {
             yield return FieldDeclaration(
@@ -43,6 +40,9 @@ internal class TemplateMembersFactory
                         VariableDeclarator(Identifier(parameter.FieldName)))
                 )).AddModifiers(Token(SyntaxKind.PrivateKeyword), Token(SyntaxKind.ReadOnlyKeyword));
         }
+
+        foreach (var constructor in GetConstructors())
+            yield return constructor;
 
         var members = _adornmentMetadata.ClassDeclaration
                                         .DescendantNodes()
