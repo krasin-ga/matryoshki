@@ -102,22 +102,26 @@ using Matryoshki.Abstractions;
 public static class MatryoshkaScrutorExtensions
 {
     public static IServiceCollection DecorateWithMatryoshka(
-        this IServiceCollection serviceCollection,
+        this IServiceCollection services,
         Expression<Func<MatryoshkaType>> expression)
     {
         var matryoshkaType = expression.Compile()();
 
         services.Decorate(matryoshkaType.Target, matryoshkaType.Type);
+
+        return services;
     }
 
     public static IServiceCollection DecorateWithNestedMatryoshkas(
-        this IServiceCollection serviceCollection,
+        this IServiceCollection services,
         Expression<Func<MatryoshkaTypes>> expression)
     {
         var matryoshkaTypes = expression.Compile()();
 
         foreach (var type in matryoshkaTypes)
             services.Decorate(matryoshkaTypes.Target, type);
+
+        return services;
     }
 }
 

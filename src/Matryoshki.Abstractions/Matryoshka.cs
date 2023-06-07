@@ -1,4 +1,5 @@
-﻿using System.Reflection;
+﻿using System.Diagnostics;
+using System.Reflection;
 
 namespace Matryoshki.Abstractions;
 
@@ -59,7 +60,34 @@ public class Matryoshka<T>
 
     private static Type LocateType(Assembly assembly, string typeName)
     {
-        return assembly.GetType(typeName)
-               ?? throw new InvalidOperationException($"Type `{typeName}` was not found");
+        var type = assembly.GetType(typeName) ?? GetTypeByFullyQualifiedName(assembly, typeName);
+        if (type is { })
+            return type;
+
+        var stackTrace = new StackTrace();
+        Assembly? lastAssembly = null;
+
+        foreach (var frame in stackTrace.GetFrames() ?? Array.Empty<StackFrame>())
+        {
+            if (!frame.HasMethod())
+                continue;
+
+            var declaringTypeAssembly = frame.GetMethod().DeclaringType.Assembly;
+            if(lastAssembly == declaringTypeAssembly)
+                continue;
+
+            lastAssembly = declaringTypeAssembly;
+            
+            type = declaringTypeAssembly.GetType(typeName)
+                   ?? GetTypeByFullyQualifiedName(declaringTypeAssembly, typeName);
+
+            if (type is { })
+                return type;
+        }
+
+        throw new InvalidOperationException($"Type `{typeName}` was not found");
     }
+
+    private static Type? GetTypeByFullyQualifiedName(Assembly assembly, string typeName)
+        => assembly.GetType($"{assembly.GetName().Name}.{typeName}");
 }
