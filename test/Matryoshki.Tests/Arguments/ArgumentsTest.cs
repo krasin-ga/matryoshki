@@ -171,6 +171,9 @@ public class ArgumentsTest
 
         public ValueTask<double> DoSomethingAsync(double first, int second, IFormattable third, string pattern)
             => ValueTask.FromResult(first * second);
+
+        public ValueTask<double> DoSomethingAsync(int overload)
+            => ValueTask.FromResult(overload * 1d);
     }
 
     private record TestImplementation : ITestInterface

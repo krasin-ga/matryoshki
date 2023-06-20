@@ -35,22 +35,22 @@ public class ParameterNamesFieldBuilder
         var stringArrayType = ArrayType(ParseTypeName("string"), List(rankSpecifier));
 
         var variable = VariableDeclarator(name)
-                                    .WithInitializer(
-                                        EqualsValueClause(
-                                            ArrayCreationExpression(
-                                                stringArrayType,
-                                                InitializerExpression(
-                                                    SyntaxKind.ArrayInitializerExpression,
-                                                    SeparatedList(arguments)))));
+            .WithInitializer(
+                EqualsValueClause(
+                    ArrayCreationExpression(
+                        stringArrayType,
+                        InitializerExpression(
+                            SyntaxKind.ArrayInitializerExpression,
+                            SeparatedList(arguments)))));
 
         return FieldDeclaration(
-                                VariableDeclaration(stringArrayType).WithVariables(
-                                    SingletonSeparatedList(variable)))
-                            .WithModifiers(
-                                TokenList(
-                                    Token(SyntaxKind.PrivateKeyword),
-                                    Token(SyntaxKind.StaticKeyword),
-                                    Token(SyntaxKind.ReadOnlyKeyword)));
+                VariableDeclaration(stringArrayType).WithVariables(
+                    SingletonSeparatedList(variable)))
+            .WithModifiers(
+                TokenList(
+                    Token(SyntaxKind.PrivateKeyword),
+                    Token(SyntaxKind.StaticKeyword),
+                    Token(SyntaxKind.ReadOnlyKeyword)));
     }
 
     public SyntaxToken GetParameterNamesArrayHelperFieldIdentifier(
@@ -67,7 +67,16 @@ public class ParameterNamesFieldBuilder
     private static SyntaxToken GetParameterNamesArrayHelperFieldIdentifier(
         IMethodSymbol methodSymbol)
     {
-        return Identifier($"MatryoshkiMethodParameterNamesForMethod{methodSymbol.Name}");
+        var parametersTrailer = string.Join(
+            "_",
+            methodSymbol.Parameters.Select(
+                p => p.Type.GetSafeTypeName()
+            ));
+
+        return Identifier(
+            string.IsNullOrWhiteSpace(parametersTrailer)
+                ? $"MethodParameterNamesForMethod{methodSymbol.Name}"
+                : $"MethodParameterNamesForMethod{methodSymbol.Name}_{parametersTrailer}");
     }
 
     private static SyntaxToken GetParameterNamesArrayHelperFieldIdentifier(
@@ -75,12 +84,10 @@ public class ParameterNamesFieldBuilder
     {
         if (propertySymbol.IsIndexer)
             return Identifier(
-                $"MatryoshkiMethodParameterNamesForIndexerProperty" +
+                $"MethodParameterNamesForIndexerProperty" +
                 $"_{propertySymbol.Type.GetSafeTypeName()}" +
                 $"_{string.Join("_", propertySymbol.Parameters.Select(p => p.Type.GetSafeTypeName()))}");
 
-        return Identifier($"MatryoshkiMethodParameterNamesForProperty{propertySymbol.Name}");
+        return Identifier($"MethodParameterNamesForProperty{propertySymbol.Name}");
     }
-
-
 }
