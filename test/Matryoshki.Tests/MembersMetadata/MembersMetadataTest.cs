@@ -1,7 +1,7 @@
 ﻿using Matryoshki.Abstractions;
 using Xunit;
 
-namespace Matryoshki.Tests.Members;
+namespace Matryoshki.Tests.MembersMetadata;
 
 public class MembersMetadataTest
 {

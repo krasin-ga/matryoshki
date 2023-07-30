@@ -26,7 +26,7 @@
     <IncludePackageReferencesDuringMarkupCompilation>true</IncludePackageReferencesDuringMarkupCompilation>
     <IncludeSymbols>false</IncludeSymbols>
     <IncludeSource>false</IncludeSource>
-    <Version>1.1.3</Version>
+    <Version>1.1.4</Version>
     <PackageReadmeFile>NugetReadme.md</PackageReadmeFile>
   </PropertyGroup>
 

@@ -1,6 +1,6 @@
 ﻿using Matryoshki.Abstractions;
 
-namespace Matryoshki.Tests.Members;
+namespace Matryoshki.Tests.MembersMetadata;
 
 public class MemberMetadataTestingAdornment : IAdornment
 {

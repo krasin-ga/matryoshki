@@ -22,5 +22,4 @@ public class ArgumentsTestingAdornment<T> : IAdornment
 
         return call.Forward();
     }
-
 }

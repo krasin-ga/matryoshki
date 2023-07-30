@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Linq.Expressions;
 using System.Threading.Tasks;
 using Matryoshki.Abstractions;
 using Xunit;
@@ -138,11 +139,13 @@ public class ArgumentsTest
     [Fact]
     public void MustGetPropertySetterValue()
     {
-        var decorator = new StringArgumentsTestingDecorator(
-            new TestImplementation());
-
         const bool expectedBool = true;
-        decorator.BoolProp = expectedBool;
+
+        var decorator = new StringArgumentsTestingDecorator(
+                            new TestImplementation())
+                        {
+                            BoolProp = expectedBool
+                        };
 
         Assert.Equal(
             expected: expectedBool,
@@ -161,13 +164,12 @@ public class ArgumentsTest
         Assert.Equal(
             expected: expectedInt,
             actual: decorator.SetterValue_Δ);
-
     }
 
     public interface ITestInterface
     {
         public int this[int a] { get; set; }
-        public bool BoolProp { get; set; }
+        public bool BoolProp { get; init; }
 
         public ValueTask<double> DoSomethingAsync(double first, int second, IFormattable third, string pattern)
             => ValueTask.FromResult(first * second);
@@ -178,12 +180,12 @@ public class ArgumentsTest
 
     private record TestImplementation : ITestInterface
     {
-        public bool BoolProp { get; set; }
-
         public int this[int a]
         {
             get => a;
             set { }
         }
+
+        public bool BoolProp { get; init; }
     }
 }

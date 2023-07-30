@@ -25,4 +25,8 @@
 	  <ProjectReference Include="..\Matryoshki.Tests.ExternalAdornments\Matryoshki.Tests.ExternalAdornments.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="Attributes\" />
+  </ItemGroup>
+
 </Project>

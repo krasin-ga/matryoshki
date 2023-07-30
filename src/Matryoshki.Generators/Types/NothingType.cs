@@ -39,7 +39,58 @@ internal static class NothingType
                         propertyName),
                     SyntaxFactory.IdentifierName(valueIdentifier)
                 )
+            ).WithModifiers(
+                SyntaxFactory.TokenList(SyntaxFactory.Token(SyntaxKind.StaticKeyword))
             );
+
+        var methodExpression = SyntaxFactory.MemberAccessExpression(
+            SyntaxKind.SimpleMemberAccessExpression,
+            IdentifierName,
+            SyntaxFactory.IdentifierName("FromPropertyAction"));
+
+        return SyntaxFactory.InvocationExpression(
+            methodExpression,
+            SyntaxFactory.ArgumentList(
+                SyntaxFactory.SeparatedList(
+                    new[]
+                    {
+                        SyntaxFactory.Argument(instance),
+                        SyntaxFactory.Argument(value),
+                        SyntaxFactory.Argument(lambda)
+                    })
+            ));
+    }
+
+    public static InvocationExpressionSyntax FromInitOnlyPropertyAction(
+        IdentifierNameSyntax instance,
+        string fieldName,
+        IdentifierNameSyntax value)
+    {
+        var instanceIdentifier = SyntaxFactory.Identifier("@innerΔΔΔ");
+        var valueIdentifier = SyntaxFactory.Identifier("@valueΔΔΔ");
+
+        var lambda = SyntaxFactory.ParenthesizedLambdaExpression(
+            parameterList: SyntaxFactory.ParameterList(
+                SyntaxFactory.SeparatedList(
+                    new[]
+                    {
+                        SyntaxFactory.Parameter(instanceIdentifier),
+                        SyntaxFactory.Parameter(valueIdentifier)
+                    })),
+            body: SyntaxFactory.InvocationExpression(
+                SyntaxFactory.IdentifierName(fieldName),
+                SyntaxFactory.ArgumentList(
+                    SyntaxFactory.SeparatedList(
+                        new[]
+                        {
+                            SyntaxFactory.Argument(SyntaxFactory.IdentifierName(instanceIdentifier)),
+                            SyntaxFactory.Argument(SyntaxFactory.IdentifierName(valueIdentifier))
+                        })
+                )
+            )
+        ).WithModifiers(
+            SyntaxFactory.TokenList(SyntaxFactory.Token(SyntaxKind.StaticKeyword))
+        );
 
         var methodExpression = SyntaxFactory.MemberAccessExpression(
             SyntaxKind.SimpleMemberAccessExpression,
@@ -102,6 +153,8 @@ internal static class NothingType
                                      )),
                     SyntaxFactory.IdentifierName(valueIdentifier)
                 )
+            ).WithModifiers(
+                SyntaxFactory.TokenList(SyntaxFactory.Token(SyntaxKind.StaticKeyword))
             );
 
         var methodExpression = SyntaxFactory.MemberAccessExpression(

@@ -1,7 +1,9 @@
-﻿using Matryoshki.Abstractions;
+﻿using System.Diagnostics.CodeAnalysis;
+using Matryoshki.Abstractions;
 
 namespace Matryoshki.Tests;
 
+[ExcludeFromCodeCoverage]
 public class SimpleAdornment : IAdornment
 {
     public bool WasExecuted { get; set; }
