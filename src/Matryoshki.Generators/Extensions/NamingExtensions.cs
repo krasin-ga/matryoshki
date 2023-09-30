@@ -6,7 +6,7 @@ namespace Matryoshki.Generators.Extensions;
 internal static class NamingExtensions
 {
     private static readonly ThreadLocal<Regex> SafeNameRegex = new ThreadLocal<Regex>(
-        () => new Regex(@"[<>`,().*?\[\]]|\s", RegexOptions.Compiled)
+        () => new Regex(@"[:<>`,().*?\[\]]|\s", RegexOptions.Compiled)
     );
 
     public static string GetSafeTypeName(this ITypeSymbol type)

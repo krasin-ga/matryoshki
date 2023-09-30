@@ -91,7 +91,7 @@ internal static class SyntaxExtensions
 
     public static TypeSyntax ToTypeSyntax(this ITypeSymbol symbol)
     {
-        return ParseTypeName(symbol.ToDisplayString());
+        return ParseTypeName(symbol.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat));
     }
 
     public static SyntaxToken ToSyntaxToken(this Accessibility accessibility)

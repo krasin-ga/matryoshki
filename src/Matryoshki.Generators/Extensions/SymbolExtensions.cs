@@ -11,7 +11,7 @@ internal static class SymbolExtensions
 
     public static string GetFullName(this ISymbol type)
     {
-        return type.ToDisplayString();
+        return type.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat);
     }
 
     public static bool DerivesFromTaskOrValueTask(this ITypeSymbol typeSymbol)
