@@ -3,7 +3,7 @@ using System.Linq.Expressions;
 using Matryoshki.Abstractions;
 using Xunit;
 
-namespace Matryoshki.Tests;
+namespace Matryoshki.Tests.MatryoshkaTypeInNestedNamespace;
 
 public class MatryoshkaTypeTests
 {
@@ -14,14 +14,14 @@ public class MatryoshkaTypeTests
             => expression.Compile()();
 
         var matryoshkaType = Decorate(
-            () => Decorate<IDisposable>.With<SimpleAdornment>());
+           () => Decorate<ICloneable>.With<SimpleAdornment>());
 
         Assert.Equal(
-            expected: typeof(IDisposableWithSimpleAdornment),
+            expected: typeof(ICloneableWithSimpleAdornment),
             actual: matryoshkaType.Type);
 
         Assert.Equal(
-            expected: typeof(IDisposable),
+            expected: typeof(ICloneable),
             actual: matryoshkaType.Target);
     }
 }

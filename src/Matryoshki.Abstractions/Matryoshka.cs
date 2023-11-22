@@ -72,14 +72,27 @@ public class Matryoshka<T>
             if (!frame.HasMethod())
                 continue;
 
-            var declaringTypeAssembly = frame.GetMethod().DeclaringType.Assembly;
+            var declaringType = frame.GetMethod().DeclaringType;
+
+            if (declaringType is null)
+                continue;
+
+            var declaringTypeAssembly = declaringType.Assembly;
             if(lastAssembly == declaringTypeAssembly)
                 continue;
 
             lastAssembly = declaringTypeAssembly;
-            
+
             type = declaringTypeAssembly.GetType(typeName)
                    ?? GetTypeByFullyQualifiedName(declaringTypeAssembly, typeName);
+
+            if (type is { })
+                return type;
+
+            if (declaringType.Namespace is null)
+                continue;
+
+            type = GetTypeByFullyQualifiedName(declaringTypeAssembly, typeName, declaringType.Namespace);
 
             if (type is { })
                 return type;
@@ -90,4 +103,7 @@ public class Matryoshka<T>
 
     private static Type? GetTypeByFullyQualifiedName(Assembly assembly, string typeName)
         => assembly.GetType($"{assembly.GetName().Name}.{typeName}");
+
+    private static Type? GetTypeByFullyQualifiedName(Assembly assembly, string typeName, string @namespace)
+        => assembly.GetType($"{@namespace}.{typeName}");
 }
