@@ -67,6 +67,7 @@ internal class MatryoshkaTypesPipeline
         return new MatryoshkaMetadata(
             targetType,
             Nesting: packSymbol,
+            IsStrictNesting: withSyntax.Identifier.Text is MatryoshkaType.Methods.WithStrictNesting,
             Adornment: adornmentSymbol,
             TypeName: typeNameOption,
             SourceNameSpace: @namespace,

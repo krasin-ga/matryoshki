@@ -37,15 +37,25 @@ public class Matryoshka<T>
         var callingAssembly = Assembly.GetCallingAssembly();
 
         var decoratorTypes = interfaces
-                             .First(t => typeof(INesting).IsAssignableFrom(t))
-                             .GenericTypeArguments
-                             .Select(
-                                 adornmentType => LocateType(
-                                     callingAssembly,
-                                     GetTypeName(@namespace, adornmentType)))
-                             .ToArray();
+            .First(t => typeof(INesting).IsAssignableFrom(t))
+            .GenericTypeArguments
+            .Select(
+                adornmentType => LocateType(
+                    callingAssembly,
+                    GetTypeName(@namespace, adornmentType)))
+            .ToArray();
 
         return new MatryoshkaTypes(typeof(T), decoratorTypes);
+    }
+
+    /// <summary>
+    /// Decorates <typeparamref name="T" /> with <typeparamref name="TNesting" />
+    /// </summary>
+    /// <returns>Types in order from outer to inner</returns>
+    public static MatryoshkaTypes WithStrictNesting<TNesting>()
+        where TNesting : INesting
+    {
+        return WithNesting<TNesting>();
     }
 
     private static string GetTypeName(string @namespace, Type adornmentType)

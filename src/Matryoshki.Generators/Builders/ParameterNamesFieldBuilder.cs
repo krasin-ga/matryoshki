@@ -67,16 +67,18 @@ public class ParameterNamesFieldBuilder
     private static SyntaxToken GetParameterNamesArrayHelperFieldIdentifier(
         IMethodSymbol methodSymbol)
     {
-        var parametersTrailer = string.Join(
+        var trailer = string.Join(
             "_",
             methodSymbol.Parameters.Select(
                 p => p.Type.GetSafeTypeName()
             ));
+   
+        var name = $"Method_Parameter_Names_{methodSymbol.Name}_{methodSymbol.ContainingType?.GetSafeTypeName()}";
 
         return Identifier(
-            string.IsNullOrWhiteSpace(parametersTrailer)
-                ? $"MethodParameterNamesForMethod{methodSymbol.Name}"
-                : $"MethodParameterNamesForMethod{methodSymbol.Name}_{parametersTrailer}");
+            string.IsNullOrWhiteSpace(trailer)
+                ? name
+                : $"{name}_{trailer}");
     }
 
     private static SyntaxToken GetParameterNamesArrayHelperFieldIdentifier(
@@ -84,10 +86,11 @@ public class ParameterNamesFieldBuilder
     {
         if (propertySymbol.IsIndexer)
             return Identifier(
-                $"MethodParameterNamesForIndexerProperty" +
+                $"Property_Parameter_Names" +
                 $"_{propertySymbol.Type.GetSafeTypeName()}" +
+                $"_{propertySymbol.ContainingType?.GetSafeTypeName()}" +
                 $"_{string.Join("_", propertySymbol.Parameters.Select(p => p.Type.GetSafeTypeName()))}");
 
-        return Identifier($"MethodParameterNamesForProperty{propertySymbol.Name}");
+        return Identifier($"Property_Parameter_Names_{propertySymbol.Name}_{propertySymbol.ContainingType?.GetSafeTypeName()}");
     }
 }

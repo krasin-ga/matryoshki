@@ -17,7 +17,7 @@ internal static class MatryoshkaType
                 Expression: GenericNameSyntax { Identifier.Text: TypeName or Alias } target,
                 Name: GenericNameSyntax
                 {
-                    Identifier.Text: Methods.With or Methods.WithNesting
+                    Identifier.Text: Methods.With or Methods.WithNesting or Methods.WithStrictNesting
                 } decoration
             })
         {
@@ -41,6 +41,7 @@ internal static class MatryoshkaType
     {
         public const string With = nameof(With);
         public const string WithNesting = nameof(WithNesting);
+        public const string WithStrictNesting = nameof(WithStrictNesting);
         public const string Name = nameof(Name);
     }
 }

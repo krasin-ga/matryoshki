@@ -13,6 +13,8 @@ internal static class CallType
 
         public const string IsGetter = nameof(IsGetter);
         public const string IsSetter = nameof(IsSetter);
+
+        public const string Recipient = nameof(Recipient);
     }
 
     public static class Methods

@@ -7,15 +7,14 @@ using Microsoft.CodeAnalysis.CSharp.Syntax;
 namespace Matryoshki.Generators.Models;
 
 internal record struct MethodTemplate(
-    MethodDeclarationSyntax Syntax, 
+    MethodDeclarationSyntax Syntax,
     SemanticModel SemanticModel,
     bool IsAsyncTemplate)
 {
     public SyntaxToken ParameterIdentifier { get; } = Syntax.ParameterList.Parameters.Single().Identifier;
     public SyntaxToken TypeParameterIdentifier { get; } = GetTypeParameter(Syntax).Identifier;
 
-    public bool NeedToConvertToAsync { get; }
-        = IsAsyncTemplate && Syntax.Identifier.Text != AdornmentType.Methods.AsyncTemplateMethodName;
+    public bool NeedToConvertToAsync { get; } = IsAsyncTemplate && Syntax.Identifier.Text != AdornmentType.Methods.AsyncTemplateMethodName;
 
     public bool HasAsyncModifier { get; } = IsAsyncTemplate && Syntax.Modifiers.Any(m => m.Value?.Equals("async") is true);
 
@@ -24,10 +23,13 @@ internal record struct MethodTemplate(
         return syntax.TypeParameterList!.Parameters.Single();
     }
 
-
-    public IReadOnlyCollection<SyntaxToken> GetSymbolModifier(ISymbol methodSymbol)
+    public IReadOnlyCollection<SyntaxToken> GetSymbolModifier(
+        ISymbol methodSymbol,
+        ExplicitInterfaceSpecifierSyntax? explicitInterfaceSpecifierSyntax)
     {
-        var modifiers = new List<SyntaxToken>(3) { methodSymbol.DeclaredAccessibility.ToSyntaxToken() };
+        var modifiers = new List<SyntaxToken>(3);
+        if (explicitInterfaceSpecifierSyntax is null)
+            modifiers.Add(methodSymbol.DeclaredAccessibility.ToSyntaxToken());
 
         if (methodSymbol.NeedToOverride())
             modifiers.Add(SyntaxFactory.Token(SyntaxKind.OverrideKeyword));

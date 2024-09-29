@@ -156,7 +156,7 @@ internal class StatementsRewriter : CSharpSyntaxRewriter
         result = null;
 
         if (!(node.OperatorToken.IsKind(SyntaxKind.EqualsEqualsToken)
-              || node.OperatorToken.IsKind(SyntaxKind.AmpersandEqualsToken)))
+              || node.OperatorToken.IsKind(SyntaxKind.ExclamationEqualsToken)))
             return false;
 
         var isEqualsOperator = node.OperatorToken.IsKind(SyntaxKind.EqualsEqualsToken);
@@ -175,9 +175,11 @@ internal class StatementsRewriter : CSharpSyntaxRewriter
                 rightType = _actualReturnType;
 
             var typesAreEqual = SymbolEqualityComparer.Default.Equals(leftType, rightType);
-            result = LiteralExpression(isEqualsOperator == typesAreEqual
-                                           ? SyntaxKind.TrueLiteralExpression
-                                           : SyntaxKind.FalseLiteralExpression);
+
+            result = LiteralExpression(
+                typesAreEqual && isEqualsOperator || !typesAreEqual && !isEqualsOperator
+                    ? SyntaxKind.TrueLiteralExpression
+                    : SyntaxKind.FalseLiteralExpression);
 
             return true;
         }
@@ -239,6 +241,8 @@ internal class StatementsRewriter : CSharpSyntaxRewriter
                 => LiteralExpression(_decoratedSymbol is IPropertySymbol && _isSetter
                                          ? SyntaxKind.TrueLiteralExpression
                                          : SyntaxKind.FalseLiteralExpression),
+            CallType.Properties.Recipient
+                => DecoratorType.InnerFieldIdentifier,
             _ => visited
         };
     }
@@ -254,18 +258,16 @@ internal class StatementsRewriter : CSharpSyntaxRewriter
         if (invocation.Expression is not MemberAccessExpressionSyntax memberAccess)
             return visited;
 
-        if (memberAccess is not { Expression: SimpleNameSyntax identifierName })
-            if (memberAccess is { Expression: MemberAccessExpressionSyntax innerMemberAccess })
-                identifierName = innerMemberAccess.Name;
-            else
-                return visited;
-
-        var identifierText = identifierName.Identifier.Text;
+        var identifierText = memberAccess switch
+        {
+            { Expression: SimpleNameSyntax identifierName } => identifierName.Identifier.Text,
+            { Expression: MemberAccessExpressionSyntax innerMemberAccess } => innerMemberAccess.Name.Identifier.Text,
+            _ => string.Empty
+        };
 
         if (!identifierText.Equals(_bodyTemplate.ParameterIdentifier.Text)
             && !identifierText.Equals(PretenseType.TypeName)
-            && memberAccess.Name is not GenericNameSyntax { Identifier.Text: PretenseType.Methods.Pretend }
-           )
+            && memberAccess.Name is not GenericNameSyntax { Identifier.Text: PretenseType.Methods.Pretend })
             return visited;
 
         switch (memberAccess.Name.Identifier.Text)

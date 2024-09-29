@@ -11,6 +11,7 @@ internal abstract class DecoratedPropertyBuilderBase
 {
     public abstract MemberDeclarationSyntax[] GenerateDecoratedProperty(
         IPropertySymbol property,
+        ExplicitInterfaceSpecifierSyntax? explicitInterfaceSpecifierSyntax,
         CancellationToken cancellationToken);
 
     protected static MemberAccessExpressionSyntax GetPropertyGetter(

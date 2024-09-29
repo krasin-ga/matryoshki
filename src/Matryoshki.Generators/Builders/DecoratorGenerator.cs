@@ -1,4 +1,5 @@
-﻿using Matryoshki.Generators.Builders.Methods;
+﻿using System.Collections.Immutable;
+using Matryoshki.Generators.Builders.Methods;
 using Matryoshki.Generators.Builders.Properties;
 using Matryoshki.Generators.Extensions;
 using Matryoshki.Generators.Models;
@@ -32,23 +33,23 @@ internal class DecoratorGenerator
         var adornmentSyntaxTree = _context.CurrentAdornment.Tree;
 
         var usingDirectives = adornmentSyntaxTree
-                              .GetRoot()
-                              .DescendantNodes()
-                              .OfType<UsingDirectiveSyntax>();
+            .GetRoot()
+            .DescendantNodes()
+            .OfType<UsingDirectiveSyntax>();
 
         var containingNamespace = _context
-                                  .CurrentAdornment.Symbol
-                                  .ContainingNamespace.GetFullName();
+            .CurrentAdornment.Symbol
+            .ContainingNamespace.GetFullName();
 
         compilationUnit = compilationUnit
-                          .AddUsings(UsingDirective(IdentifierName("System")))
-                          .AddUsings(UsingDirective(IdentifierName(containingNamespace)))
-                          .AddUsings(usingDirectives.ToArray())
-                          .AddMembers(
-                              _context.GetNamespace() is { } @ns
-                                  ? NamespaceDeclaration(IdentifierName(@ns))
-                                      .AddMembers(@class)
-                                  : @class);
+            .AddUsings(UsingDirective(IdentifierName("System")))
+            .AddUsings(UsingDirective(IdentifierName(containingNamespace)))
+            .AddUsings(usingDirectives.ToArray())
+            .AddMembers(
+                _context.GetNamespace() is { } @ns
+                    ? NamespaceDeclaration(IdentifierName(@ns))
+                        .AddMembers(@class)
+                    : @class);
 
         return compilationUnit.NormalizeWhitespace().ToFullString();
     }
@@ -75,13 +76,13 @@ internal class DecoratorGenerator
         var nullableEnableDirective = NullableDirectiveTrivia(Token(SyntaxKind.EnableKeyword), true);
 
         var @class = ClassDeclaration(className)
-                     .AddModifiers(Token(SyntaxKind.PublicKeyword))
-                     .AddBaseListTypes(SimpleBaseType(targetType))
-                     .AddMembers(membersFactory.GetMembers().ToArray())
-                     .AddAttributeLists(
-                         _context.CurrentAdornment.ClassDeclaration.AttributeLists.ToArray()
-                         )
-                     .WithLeadingTrivia(Trivia(nullableEnableDirective));
+            .AddModifiers(Token(SyntaxKind.PublicKeyword))
+            .AddBaseListTypes(SimpleBaseType(targetType))
+            .AddMembers(membersFactory.GetMembers().ToArray())
+            .AddAttributeLists(
+                _context.CurrentAdornment.ClassDeclaration.AttributeLists.ToArray()
+            )
+            .WithLeadingTrivia(Trivia(nullableEnableDirective));
 
         var parameterNamesFieldBuilder = new ParameterNamesFieldBuilder();
 
@@ -100,6 +101,8 @@ internal class DecoratorGenerator
             ? target.GetMembersThatCanBeExtractedToInterface()
             : _context.MatryoshkaMetadata.Target.GetMembersThatCanBeDecorated();
 
+        var decoratedMethods = new Dictionary<string, List<ImmutableArray<IParameterSymbol>>>();
+        var decoratedProperties = new Dictionary<string, List<ImmutableArray<IParameterSymbol>>>();
 
         foreach (var member in members)
             @class = member switch
@@ -112,10 +115,16 @@ internal class DecoratorGenerator
                         or MethodKind.EventRaise)
                     }
                     method => @class.AddMembers(
-                    decoratedMethodBuilder.GenerateDecoratedMethod(method, cancellationToken)),
+                    GenerateDecoratedMethod(
+                        decoratedMethodBuilder,
+                        method,
+                        decoratedMethods,
+                        cancellationToken)
+                ),
 
                 IPropertySymbol property => @class.AddMembers(
-                    decoratedPropertyBuilder.GenerateDecoratedProperty(property, cancellationToken)),
+                    GenerateDecoratedProperty(decoratedPropertyBuilder, property, decoratedProperties, cancellationToken)
+                    ),
 
                 IEventSymbol @event => @class.AddMembers(
                     delegatedEventBuilder.GenerateEventHandler(@event)
@@ -124,5 +133,74 @@ internal class DecoratorGenerator
                 _ => @class
             };
         return @class;
+    }
+
+    private static MemberDeclarationSyntax[] GenerateDecoratedProperty(
+        DecoratedPropertyBuilder decoratedPropertyBuilder, 
+        IPropertySymbol property,
+        Dictionary<string, List<ImmutableArray<IParameterSymbol>>> decoratedProperties,
+        CancellationToken cancellationToken)
+    {
+        ExplicitInterfaceSpecifierSyntax? explicitInterfaceSpecifierSyntax = null;
+
+        if (!decoratedProperties.TryGetValue(property.Name, out var parameterVariations))
+            decoratedProperties[property.Name] = [property.Parameters];
+        else
+        {
+            if (parameterVariations.Any(p => p.SequenceEqual(property.Parameters, ParameterSymbolEqualityComparer.Instance))
+                && property.ContainingType is { })
+                explicitInterfaceSpecifierSyntax = ExplicitInterfaceSpecifier(
+                    IdentifierName(property.ContainingType.GetFullName()),
+                    Token(SyntaxKind.DotToken));
+            else
+                parameterVariations.Add(property.Parameters);
+        }
+
+        return decoratedPropertyBuilder.GenerateDecoratedProperty(
+            property, 
+            explicitInterfaceSpecifierSyntax, 
+            cancellationToken);
+    }
+
+    private static MemberDeclarationSyntax[] GenerateDecoratedMethod(
+        DecoratedMethodBuilder decoratedMethodBuilder,
+        IMethodSymbol method,
+        Dictionary<string, List<ImmutableArray<IParameterSymbol>>> decoratedMethods,
+        CancellationToken cancellationToken)
+    {
+        ExplicitInterfaceSpecifierSyntax? explicitInterfaceSpecifierSyntax = null;
+
+        if (!decoratedMethods.TryGetValue(method.Name, out var parameterVariations))
+            decoratedMethods[method.Name] = [method.Parameters];
+        else
+        {
+            if (parameterVariations.Any(p => p.SequenceEqual(method.Parameters, ParameterSymbolEqualityComparer.Instance))
+                && method.ContainingType is { })
+                explicitInterfaceSpecifierSyntax = ExplicitInterfaceSpecifier(
+                    IdentifierName(method.ContainingType.GetFullName()),
+                    Token(SyntaxKind.DotToken));
+            else
+                parameterVariations.Add(method.Parameters);
+        }
+
+        return decoratedMethodBuilder.GenerateDecoratedMethod(
+            method,
+            explicitInterfaceSpecifierSyntax,
+            cancellationToken);
+    }
+
+    public class ParameterSymbolEqualityComparer : IEqualityComparer<IParameterSymbol>
+    {
+        public static readonly ParameterSymbolEqualityComparer Instance = new();
+
+        public bool Equals(IParameterSymbol x, IParameterSymbol y)
+        {
+            return SymbolEqualityComparer.Default.Equals(x, y);
+        }
+
+        public int GetHashCode(IParameterSymbol obj)
+        {
+            return SymbolEqualityComparer.Default.GetHashCode(obj);
+        }
     }
 }

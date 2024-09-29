@@ -8,6 +8,7 @@ public class Call<TResult>
     public bool IsGetter { get; }
     public bool IsSetter { get; }
     public bool IsMethod { get; }
+    public dynamic Recipient { get; }
 
     private Call()
     {

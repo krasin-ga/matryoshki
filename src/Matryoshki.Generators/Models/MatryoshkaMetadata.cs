@@ -5,21 +5,22 @@ namespace Matryoshki.Generators.Models;
 internal record struct MatryoshkaMetadata(
     ITypeSymbol Target,
     INamedTypeSymbol? Nesting,
+    bool IsStrictNesting,
     ITypeSymbol? Adornment,
     string? SourceNameSpace,
     string? TypeName,
     bool IsInGlobalStatement,
     Location Location)
 {
-    public AdornmentMetadata[] GetAdornments(MatryoshkiCompilation matryoshkiCompilation)
+    public (AdornmentMetadata[] Adornments, bool UseStrictNesting) GetAdornments(MatryoshkiCompilation matryoshkiCompilation)
     {
         if (Nesting is { })
-            return matryoshkiCompilation.GetAdornments(Nesting).ToArray();
+            return (matryoshkiCompilation.GetAdornments(Nesting).ToArray(), matryoshkiCompilation.IsStrict(Nesting));
 
         if (Adornment is { })
-            return new[] { matryoshkiCompilation.GetAdornment(Adornment) };
+            return (new[] { matryoshkiCompilation.GetAdornment(Adornment) }, UseStrictNesting: default);
 
-        return Array.Empty<AdornmentMetadata>();
+        return (Array.Empty<AdornmentMetadata>(), UseStrictNesting: default);
     }
 
     public readonly bool Equals(MatryoshkaMetadata other)

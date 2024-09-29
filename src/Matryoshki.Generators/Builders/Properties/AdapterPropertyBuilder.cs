@@ -9,6 +9,7 @@ internal class AdapterPropertyBuilder : DecoratedPropertyBuilderBase
 {
     public override MemberDeclarationSyntax[] GenerateDecoratedProperty(
         IPropertySymbol property,
+        ExplicitInterfaceSpecifierSyntax? explicitInterfaceSpecifierSyntax,
         CancellationToken cancellationToken)
     {
         var syntaxTokens = new[] { SyntaxFactory.Token(SyntaxKind.PublicKeyword) };

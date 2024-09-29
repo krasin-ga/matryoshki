@@ -9,7 +9,7 @@ internal static class NothingType
         = SyntaxFactory.IdentifierName("Matryoshki.Abstractions.Nothing");
 
     public static readonly TypeSyntax ValueTask
-        = SyntaxFactory.ParseTypeName("ValueTask<Matryoshki.Abstractions.Nothing>");
+        = SyntaxFactory.ParseTypeName("global::System.Threading.Tasks.ValueTask<Matryoshki.Abstractions.Nothing>");
 
     public static readonly ExpressionSyntax Instance =
         SyntaxFactory.ParseExpression("Matryoshki.Abstractions.Nothing.Instance");

@@ -6,7 +6,8 @@ namespace Matryoshki.Generators.Models;
 internal record struct DecoratorGenerationContext(
     MatryoshkaMetadata MatryoshkaMetadata,
     AdornmentMetadata CurrentAdornment,
-    AdornmentMetadata? NextAdornment)
+    AdornmentMetadata? NextAdornment,
+    bool IsStrict)
 {
     private const string RootNamespace = "MatryoshkiGenerated";
 
@@ -31,7 +32,7 @@ internal record struct DecoratorGenerationContext(
     [Pure]
     public string GetInnerTypeName()
     {
-        if (NextAdornment is null)
+        if (NextAdornment is null || !IsStrict)
             return MatryoshkaMetadata.Target.GetFullName();
 
         return InternalGetClassName(NextAdornment.Value);

@@ -12,6 +12,7 @@ public class SymbolToInterfaceMemberTranslationStrategy : ISymbolTranslationStra
         return methodSymbol
                .ToMethodDeclarationSyntax(
                    Enumerable.Empty<SyntaxToken>(),
+                   explicitInterfaceSpecifierSyntax: null,
                    renameParameters: false)
                .WithSemicolonToken(SyntaxFactory.Token(SyntaxKind.SemicolonToken));
     }

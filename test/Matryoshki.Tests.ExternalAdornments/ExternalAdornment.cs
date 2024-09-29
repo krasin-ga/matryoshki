@@ -8,7 +8,13 @@ namespace Matryoshki.Tests.ExternalAdornments;
 public class ExternalAdornment : IAdornment
 {
     public bool Executed { get; set; }
+    public bool ExecutedAsync { get; set; }
 
+    public async Task<TResult> AsyncMethodTemplate<TResult>(Call<TResult> call)
+    {
+        ExecutedAsync = true;
+        return await call.ForwardAsync();
+    }
     public TResult MethodTemplate<TResult>(Call<TResult> call)
     {
         Executed = true;

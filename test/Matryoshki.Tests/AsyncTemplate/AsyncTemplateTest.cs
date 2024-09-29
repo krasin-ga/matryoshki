@@ -1,4 +1,5 @@
-﻿using System.Threading.Tasks;
+﻿using System;
+using System.Threading.Tasks;
 using Matryoshki.Abstractions;
 using Xunit;
 
@@ -18,10 +19,20 @@ public class AsyncTemplateTest
             result: expected,
             new TestImplementation());
 
+        await decorator.DoNothingTask();
+        Assert.True(decorator.ExecutedAsync_Δ);
+
+        await decorator.DoNothingValueTask();
+        Assert.True(decorator.ExecutedAsync_Δ);
 
         var syncResult = decorator.GetDoubleSync();
+        Assert.False(decorator.ExecutedAsync_Δ);
+
         var asyncResult = await decorator.GetDoubleAsync();
+        Assert.True(decorator.ExecutedAsync_Δ);
+
         var asyncValueTaskResult = await decorator.GetDoubleAsyncValueTask();
+        Assert.True(decorator.ExecutedAsync_Δ);
 
         Assert.Equal(
             expected: expected,
@@ -38,9 +49,24 @@ public class AsyncTemplateTest
 
     public interface ITestInterface
     {
-        public ValueTask<double> GetDoubleAsync()
+        public Task DoNothingTask()
         {
-            return default;
+            return Task.CompletedTask;
+        }
+
+        public ValueTask DoNothingValueTask()
+        {
+            return ValueTask.CompletedTask;
+        }
+
+        public Task<double> GetDoubleAsync()
+        {
+            return Task.FromResult(0d);
+        }
+
+        public ValueTask<SomeUserDefinedType> GetSomeCustomType()
+        {
+            return ValueTask.FromResult<SomeUserDefinedType>(null!);
         }
 
         public ValueTask<double> GetDoubleAsyncValueTask()
@@ -52,6 +78,10 @@ public class AsyncTemplateTest
         {
             return default;
         }
+    }
+
+    public class SomeUserDefinedType
+    {
     }
 
     private record TestImplementation : ITestInterface;

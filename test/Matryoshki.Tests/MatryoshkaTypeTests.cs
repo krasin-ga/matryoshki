@@ -10,7 +10,7 @@ public class MatryoshkaTypeTests
     [Fact]
     public void MustCorrectlyResolveTypesInCompiledExpressions()
     {
-        static Abstractions.MatryoshkaType Decorate(Expression<Func<Abstractions.MatryoshkaType>> expression)
+        static MatryoshkaType Decorate(Expression<Func<Abstractions.MatryoshkaType>> expression)
             => expression.Compile()();
 
         var matryoshkaType = Decorate(

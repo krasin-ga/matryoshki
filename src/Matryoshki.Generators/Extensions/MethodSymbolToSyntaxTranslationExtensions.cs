@@ -10,12 +10,14 @@ public static class MethodSymbolToSyntaxTranslationExtensions
     public static MethodDeclarationSyntax ToMethodDeclarationSyntax(
         this IMethodSymbol methodSymbol,
         IEnumerable<SyntaxToken> modifiers,
+        ExplicitInterfaceSpecifierSyntax? explicitInterfaceSpecifierSyntax,
         bool renameParameters)
     {
         return MethodDeclaration(methodSymbol.ReturnType.ToTypeSyntax(), methodSymbol.Name)
-               .WithModifiers(TokenList(modifiers))
-               .WithTypeParameterList(GetTypeParameterSyntaxNode(methodSymbol))
-               .WithParameterList(GetParameterSyntaxNode(methodSymbol, renameParameters));
+            .WithExplicitInterfaceSpecifier(explicitInterfaceSpecifierSyntax)
+            .WithModifiers(TokenList(modifiers))
+            .WithTypeParameterList(GetTypeParameterSyntaxNode(methodSymbol))
+            .WithParameterList(GetParameterSyntaxNode(methodSymbol, renameParameters));
     }
 
     private static TypeParameterListSyntax? GetTypeParameterSyntaxNode(IMethodSymbol method)

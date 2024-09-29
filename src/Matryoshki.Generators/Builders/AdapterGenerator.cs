@@ -26,12 +26,10 @@ internal class AdapterGenerator
                 DecoratorType.InnerParameter,
                 type: targetType);
 
-
         var @class = SyntaxFactory.ClassDeclaration(className)
-                                  .AddModifiers(SyntaxFactory.Token(SyntaxKind.PublicKeyword))
-                                  .AddBaseListTypes(SyntaxFactory.SimpleBaseType(SyntaxFactory.ParseTypeName(interfaceExtractionMetadata.InterfaceName)))
-                                  .AddMembers(membersFactory.GetMembers().ToArray());
-
+            .AddModifiers(SyntaxFactory.Token(SyntaxKind.PublicKeyword))
+            .AddBaseListTypes(SyntaxFactory.SimpleBaseType(SyntaxFactory.ParseTypeName(interfaceExtractionMetadata.InterfaceName)))
+            .AddMembers(membersFactory.GetMembers().ToArray());
 
         var decoratedMethodBuilder = new AdapterMethodBuilder();
 
@@ -49,10 +47,16 @@ internal class AdapterGenerator
                         or MethodKind.EventRaise)
                     }
                     method => @class.AddMembers(
-                    decoratedMethodBuilder.GenerateDecoratedMethod(method, cancellationToken)),
+                    decoratedMethodBuilder.GenerateDecoratedMethod(
+                        method,
+                        explicitInterfaceSpecifierSyntax: null,
+                        cancellationToken)),
 
                 IPropertySymbol property => @class.AddMembers(
-                    propertyBuilder.GenerateDecoratedProperty(property, cancellationToken)),
+                    propertyBuilder.GenerateDecoratedProperty(
+                        property,
+                        explicitInterfaceSpecifierSyntax: null!,
+                        cancellationToken)),
 
                 IEventSymbol @event => @class.AddMembers(
                     delegatedEventBuilder.GenerateEventHandler(@event)

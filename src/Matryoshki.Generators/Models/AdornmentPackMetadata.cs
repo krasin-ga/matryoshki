@@ -4,5 +4,6 @@ namespace Matryoshki.Generators.Models;
 
 internal record struct NestingMetadata(
     ITypeSymbol Symbol,
-    ITypeSymbol[] Adornments
+    ITypeSymbol[] Adornments,
+    bool IsStrict
 );

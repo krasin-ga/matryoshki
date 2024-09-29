@@ -9,7 +9,7 @@ using static Microsoft.CodeAnalysis.CSharp.SyntaxFactory;
 
 namespace Matryoshki.Generators.Builders.Methods;
 
-internal class DecoratedMethodBuilder: DecoratedMethodBuilderBase
+internal class DecoratedMethodBuilder : DecoratedMethodBuilderBase
 {
     private readonly AdornmentMetadata _adornmentMetadata;
     private readonly ParameterNamesFieldBuilder _parameterNamesFieldBuilder;
@@ -24,19 +24,21 @@ internal class DecoratedMethodBuilder: DecoratedMethodBuilderBase
 
     public override MemberDeclarationSyntax[] GenerateDecoratedMethod(
         IMethodSymbol methodSymbol,
+        ExplicitInterfaceSpecifierSyntax? explicitInterfaceSpecifierSyntax,
         CancellationToken cancellationToken)
     {
         var template = _adornmentMetadata.GetTemplate(methodSymbol);
 
-        var modifiers = template.GetSymbolModifier(methodSymbol);
+        var modifiers = template.GetSymbolModifier(methodSymbol, explicitInterfaceSpecifierSyntax);
         var isAsync = template.HasAsyncModifier || template.NeedToConvertToAsync;
 
         var declaration = methodSymbol.ToMethodDeclarationSyntax(
-            modifiers: modifiers,
+            modifiers,
+            explicitInterfaceSpecifierSyntax,
             renameParameters: true);
 
         ExpressionSyntax next = CreateInvocationExpression(
-            methodSymbol, 
+            methodSymbol,
             renameArguments: true);
 
         var returnsNothing = methodSymbol.ReturnsVoid
@@ -44,16 +46,16 @@ internal class DecoratedMethodBuilder: DecoratedMethodBuilderBase
 
         var nothingMethodWrapper = returnsNothing
             ? declaration.WithIdentifier(GetVoidMethodWrapperIdentifier(declaration.Identifier))
-                         .WithModifiers(TokenList(isAsync
-                                                      ? new[] { Token(SyntaxKind.PrivateKeyword), Token(SyntaxKind.AsyncKeyword) }
-                                                      : new[] { Token(SyntaxKind.PrivateKeyword) }))
-                         .WithReturnType(isAsync
-                                             ? NothingType.ValueTask
-                                             : NothingType.IdentifierName)
-                         .WithBody(Block(ExpressionStatement(template.NeedToConvertToAsync
-                                                                 ? AwaitExpression(next)
-                                                                 : next),
-                                         ReturnStatement(NothingType.Instance)))
+                .WithModifiers(TokenList(isAsync
+                                             ? new[] { Token(SyntaxKind.PrivateKeyword), Token(SyntaxKind.AsyncKeyword) }
+                                             : new[] { Token(SyntaxKind.PrivateKeyword) }))
+                .WithReturnType(isAsync
+                                    ? NothingType.ValueTask
+                                    : NothingType.IdentifierName)
+                .WithBody(Block(ExpressionStatement(isAsync
+                                                        ? AwaitExpression(next)
+                                                        : next),
+                                ReturnStatement(NothingType.Instance)))
             : null;
 
         if (nothingMethodWrapper is { })
@@ -84,17 +86,17 @@ internal class DecoratedMethodBuilder: DecoratedMethodBuilderBase
 
         if (nothingMethodWrapper is { })
             return new MemberDeclarationSyntax[]
-                   {
-                       fieldWithParameterNames,
-                       nothingMethodWrapper,
-                       declaration,
-                   };
+            {
+                fieldWithParameterNames,
+                nothingMethodWrapper,
+                declaration,
+            };
 
         return new MemberDeclarationSyntax[]
-               {
-                   fieldWithParameterNames,
-                   declaration,
-               };
+        {
+            fieldWithParameterNames,
+            declaration,
+        };
     }
 
     private static SyntaxToken GetVoidMethodWrapperIdentifier(SyntaxToken identifier)

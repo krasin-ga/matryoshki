@@ -163,9 +163,9 @@ public class MatryoshkiSourceGenerator : IIncrementalGenerator
         }
 
         if (metadata.Nesting is { })
-            compilation.AddPackMetadata(metadata.Nesting);
+            compilation.AddNestingMetadata(metadata.Nesting, metadata.IsStrictNesting);
 
-        var adornments = metadata.GetAdornments(compilation);
+        var (adornments, isStrict) = metadata.GetAdornments(compilation);
 
         for (var i = 0; i < adornments.Length; i++)
         {
@@ -176,7 +176,7 @@ public class MatryoshkiSourceGenerator : IIncrementalGenerator
                 ? adornments[i + 1]
                 : (AdornmentMetadata?)null;
 
-            var generationContext = new DecoratorGenerationContext(metadata, current, next);
+            var generationContext = new DecoratorGenerationContext(metadata, current, next, isStrict);
 
             var decoratorGenerator = new DecoratorGenerator(
                 context: generationContext,

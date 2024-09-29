@@ -27,13 +27,14 @@ internal class DecoratedPropertyBuilder : DecoratedPropertyBuilderBase
 
     public override MemberDeclarationSyntax[] GenerateDecoratedProperty(
         IPropertySymbol property,
+        ExplicitInterfaceSpecifierSyntax? explicitInterfaceSpecifierSyntax,
         CancellationToken cancellationToken)
     {
         if (property.IsIndexer)
             return new MemberDeclarationSyntax[]
                    {
                        _parameterNamesFieldBuilder.CreateFieldWithParameterNames(property),
-                       GenerateIndexer(property, cancellationToken)
+                       GenerateIndexer(property, explicitInterfaceSpecifierSyntax, cancellationToken)
                    };
 
         var propertyIdentifierName = IdentifierName(property.Name);
@@ -46,7 +47,7 @@ internal class DecoratedPropertyBuilder : DecoratedPropertyBuilderBase
             : default;
 
         var propertyDeclaration = property.ToPropertyDeclarationSyntax(
-            _adornmentMetadata.MethodTemplate.GetSymbolModifier(property),
+            _adornmentMetadata.MethodTemplate.GetSymbolModifier(property, explicitInterfaceSpecifierSyntax),
             _ => new StatementsRewriter(
                 bodyTemplate: _adornmentMetadata.MethodTemplate,
                 nextInvocationExpression: invokeNext,
@@ -80,6 +81,10 @@ internal class DecoratedPropertyBuilder : DecoratedPropertyBuilderBase
                 isSetter: true,
                 cancellationToken
             ).CreateBody());
+
+        if (explicitInterfaceSpecifierSyntax is { })
+            propertyDeclaration = propertyDeclaration.WithExplicitInterfaceSpecifier(
+                explicitInterfaceSpecifierSyntax);
 
         if (initOnlySettingActionFieldSyntax is { })
         {
@@ -154,10 +159,11 @@ internal class DecoratedPropertyBuilder : DecoratedPropertyBuilderBase
 
     private BasePropertyDeclarationSyntax GenerateIndexer(
         IPropertySymbol indexer,
+        ExplicitInterfaceSpecifierSyntax? explicitInterfaceSpecifierSyntax,
         CancellationToken cancellationToken)
     {
-        return indexer.ToIndexerDeclarationSyntax(
-            modifiers: _adornmentMetadata.MethodTemplate.GetSymbolModifier(indexer),
+        var indexerDeclarationSyntax = indexer.ToIndexerDeclarationSyntax(
+            modifiers: _adornmentMetadata.MethodTemplate.GetSymbolModifier(indexer, explicitInterfaceSpecifierSyntax),
             renameIndexerParameters: true,
             getterBodyFactory:
             symbol => new StatementsRewriter(
@@ -191,5 +197,11 @@ internal class DecoratedPropertyBuilder : DecoratedPropertyBuilderBase
                     cancellationToken
                 ).CreateBody()
         );
+
+        if (explicitInterfaceSpecifierSyntax is { })
+            return indexerDeclarationSyntax.WithExplicitInterfaceSpecifier(
+                explicitInterfaceSpecifierSyntax);
+
+        return indexerDeclarationSyntax;
     }
 }

@@ -13,8 +13,8 @@ public class MultiplicationAdornment : IAdornment
 
     public TResult MethodTemplate<TResult>(Call<TResult> call)
     {
-        //Dynamic is used to bypass compiler checks
-        //actual variable in decorator will be of type TResult
+        //DynamicForward is used to bypass compiler checks in template and will be stripped from generated code.
+        //Actual variable in decorator will be of type TResult because `var` is used to declare it
         var result = call.DynamicForward();
 
         if (typeof(TResult) == typeof(int)

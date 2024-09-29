@@ -17,14 +17,14 @@ internal class MatryoshkiCompilation
         _adornmentMap = new Dictionary<string, AdornmentMetadata>();
     }
 
-    public void AddPackMetadata(INamedTypeSymbol packSymbol)
+    public void AddNestingMetadata(INamedTypeSymbol packSymbol, bool isStrict)
     {
         var adornments = packSymbol
                       .AllInterfaces
                       .Where(i => i.IsImplementingInterface(NestingType.Name) && i.IsGenericType)
                       .SelectMany(i => i.TypeArguments).ToArray();
 
-        var packMetadata = new NestingMetadata(packSymbol, adornments);
+        var packMetadata = new NestingMetadata(packSymbol, adornments, isStrict);
         _packsMap[GetKey(packSymbol)] = packMetadata;
     }
 
@@ -40,6 +40,11 @@ internal class MatryoshkiCompilation
 
         foreach (var adornmentSymbol in pack.Adornments)
             yield return _adornmentMap[GetKey(adornmentSymbol)];
+    }
+
+    public bool IsStrict(ITypeSymbol packSymbol)
+    {
+        return !_packsMap.TryGetValue(GetKey(packSymbol), out var pack)  || pack.IsStrict;
     }
 
     public AdornmentMetadata GetAdornment(ITypeSymbol adornment)

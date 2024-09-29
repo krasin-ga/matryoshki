@@ -9,6 +9,7 @@ internal class AdapterMethodBuilder : DecoratedMethodBuilderBase
 {
     public override MemberDeclarationSyntax[] GenerateDecoratedMethod(
         IMethodSymbol methodSymbol, 
+        ExplicitInterfaceSpecifierSyntax? explicitInterfaceSpecifierSyntax,
         CancellationToken cancellationToken)
     {
         var inner = CreateInvocationExpression(methodSymbol, renameArguments: false);
@@ -17,6 +18,7 @@ internal class AdapterMethodBuilder : DecoratedMethodBuilderBase
                {
                    methodSymbol.ToMethodDeclarationSyntax(
                                    modifiers: new[] { SyntaxFactory.Token(SyntaxKind.PublicKeyword) },
+                                   explicitInterfaceSpecifierSyntax,
                                    renameParameters: false)
                                .WithExpressionBody(SyntaxFactory.ArrowExpressionClause(inner))
                                .WithSemicolonToken(SyntaxFactory.Token(SyntaxKind.SemicolonToken))

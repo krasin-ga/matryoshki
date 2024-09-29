@@ -9,7 +9,8 @@ namespace Matryoshki.Generators.Builders.Methods;
 internal abstract class DecoratedMethodBuilderBase 
 {
     public abstract MemberDeclarationSyntax[] GenerateDecoratedMethod(
-        IMethodSymbol methodSymbol, 
+        IMethodSymbol methodSymbol,
+        ExplicitInterfaceSpecifierSyntax? explicitInterfaceSpecifierSyntax,
         CancellationToken cancellationToken);
 
     protected static InvocationExpressionSyntax CreateInvocationExpression(

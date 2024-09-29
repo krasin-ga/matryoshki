@@ -1,14 +1,9 @@
 ﻿using Microsoft.CodeAnalysis;
-using Microsoft.CodeAnalysis.CSharp;
 
 namespace Matryoshki.Generators.Extensions;
 
 internal static class SymbolExtensions
 {
-    private static INamedTypeSymbol? _taskSymbol;
-    private static INamedTypeSymbol? _valueTaskSymbol;
-    private static INamedTypeSymbol? _genericValueTaskSymbol;
-
     public static string GetFullName(this ISymbol type)
     {
         return type.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat);
@@ -16,28 +11,15 @@ internal static class SymbolExtensions
 
     public static bool DerivesFromTaskOrValueTask(this ITypeSymbol typeSymbol)
     {
-        var task = _taskSymbol ??= typeSymbol.ContainingAssembly.GetTypeByMetadataName(typeof(Task).FullName);
-        var valueTask = _valueTaskSymbol ??= typeSymbol.ContainingAssembly.GetTypeByMetadataName(typeof(ValueTask).FullName);
-        var valueTaskTyped = _genericValueTaskSymbol ??= typeSymbol.ContainingAssembly.GetTypeByMetadataName(typeof(ValueTask<>).FullName);
-
-        if (task is null || valueTask is null)
-            return false;
-
-        return IsAssignableFrom(task, typeSymbol)
-               || SymbolEqualityComparer.Default.Equals(valueTask, typeSymbol)
-               || SymbolEqualityComparer.Default.Equals(valueTaskTyped, (typeSymbol as INamedTypeSymbol)?.ConstructedFrom);
+        return typeSymbol.Name is "Task" or "ValueTask"
+               && typeSymbol.ContainingNamespace?.Name == "Tasks"
+               && typeSymbol.ContainingNamespace?.ContainingNamespace?.Name == "Threading"
+               && typeSymbol.ContainingNamespace?.ContainingNamespace?.ContainingNamespace?.Name == "System";
     }
 
     public static bool DerivesFromNonTypedTaskOrValueTask(this ITypeSymbol typeSymbol)
     {
-        var task = _taskSymbol ??= typeSymbol.ContainingAssembly.GetTypeByMetadataName(typeof(Task).FullName);
-        var valueTask = _valueTaskSymbol ??= typeSymbol.ContainingAssembly.GetTypeByMetadataName(typeof(ValueTask).FullName);
-
-        if (task is null || valueTask is null)
-            return false;
-
-        return SymbolEqualityComparer.Default.Equals(valueTask, typeSymbol)
-               || SymbolEqualityComparer.Default.Equals(task, typeSymbol);
+        return DerivesFromTaskOrValueTask(typeSymbol) && typeSymbol is INamedTypeSymbol { IsGenericType: false };
     }
 
     public static bool IsAssignableFrom(
@@ -92,7 +74,6 @@ internal static class SymbolExtensions
             if (symbol.IsSealed)
                 return false;
 
-
             if (symbol is IPropertySymbol { OverriddenProperty: { } overriddenProperty })
                 symbol = overriddenProperty;
 
@@ -128,7 +109,6 @@ internal static class SymbolExtensions
                 except.Add(overriddenEvent);
         }
 
-
         if (type.BaseType is { SpecialType: not SpecialType.System_Object })
             foreach (var member in GetMembersThatCanBeDecorated(type.BaseType, except))
                 yield return member;
@@ -153,8 +133,8 @@ internal static class SymbolExtensions
             if (symbol is IMethodSymbol { OverriddenMethod: { } overriddenMethod })
                 symbol = overriddenMethod;
 
-            return symbol is IEventSymbol or IPropertySymbol 
-                or IMethodSymbol {MethodKind: MethodKind.Ordinary}
+            return symbol is IEventSymbol or IPropertySymbol
+                or IMethodSymbol { MethodKind: MethodKind.Ordinary }
                 or IFieldSymbol;
         }
 
@@ -182,7 +162,6 @@ internal static class SymbolExtensions
             if (member is IEventSymbol { OverriddenEvent: { } overriddenEvent })
                 except.Add(overriddenEvent);
         }
-
 
         if (type.BaseType is { SpecialType: not SpecialType.System_Object })
             foreach (var member in GetMembersThatCanBeDecorated(type.BaseType, except))
